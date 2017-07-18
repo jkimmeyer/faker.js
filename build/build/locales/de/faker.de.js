@@ -33,7 +33,7 @@ function Address (faker) {
    * order to build the city name.
    *
    * If no format string is provided one of the following is randomly used:
-   * 
+   *
    * * `{{address.cityPrefix}} {{name.firstName}}{{address.citySuffix}}`
    * * `{{address.cityPrefix}} {{name.firstName}}`
    * * `{{name.firstName}}{{address.citySuffix}}`
@@ -112,13 +112,13 @@ function Address (faker) {
       var address = "";
       switch (faker.random.number(2)) {
       case 0:
-          address = Helpers.replaceSymbolWithNumber("#####") + " " + faker.address.streetName();
+          address = faker.random.arrayElement(faker.locales[faker.locale].address.street_root) + " " + Helpers.replaceSymbolWithNumber("#");
           break;
       case 1:
-          address = Helpers.replaceSymbolWithNumber("####") +  " " + faker.address.streetName();
+          address = faker.random.arrayElement(faker.locales[faker.locale].address.street_root) + " " + Helpers.replaceSymbolWithNumber("##");
           break;
       case 2:
-          address = Helpers.replaceSymbolWithNumber("###") + " " + faker.address.streetName();
+          address = faker.random.arrayElement(faker.locales[faker.locale].address.street_root) + " " + Helpers.replaceSymbolWithNumber("###");
           break;
       }
       return useFullAddress ? (address + " " + faker.address.secondaryAddress()) : address;
@@ -132,7 +132,7 @@ function Address (faker) {
   this.streetSuffix = function () {
       return faker.random.arrayElement(faker.definitions.address.street_suffix);
   }
-  
+
   /**
    * streetPrefix
    *
@@ -219,7 +219,7 @@ function Address (faker) {
   this.longitude = function () {
       return (faker.random.number(360 * 10000) / 10000.0 - 180.0).toFixed(4);
   }
-  
+
   return this;
 }
 
@@ -353,10 +353,10 @@ module['exports'] = Commerce;
  * @namespace faker.company
  */
 var Company = function (faker) {
-  
+
   var self = this;
   var f = faker.fake;
-  
+
   /**
    * suffixes
    *
@@ -468,7 +468,7 @@ var Company = function (faker) {
   this.bsNoun = function () {
       return faker.random.arrayElement(faker.definitions.company.bs_noun);
   }
-  
+
 }
 
 module['exports'] = Company;
@@ -600,9 +600,9 @@ var _Date = function (faker) {
 
       return faker.random.arrayElement(source);
   };
-  
+
   return self;
-  
+
 };
 
 module['exports'] = _Date;
@@ -613,7 +613,7 @@ module['exports'] = _Date;
 */
 
 function Fake (faker) {
-  
+
   /**
    * Generator method for combining faker methods based on string input
    *
@@ -706,12 +706,12 @@ function Fake (faker) {
     res = str.replace('{{' + token + '}}', result);
 
     // return the response recursively until we are done finding all tags
-    return fake(res);    
+    return fake(res);
   }
-  
+
   return this;
-  
-  
+
+
 }
 
 module['exports'] = Fake;
@@ -879,7 +879,7 @@ module['exports'] = Finance;
  */
 var Hacker = function (faker) {
   var self = this;
-  
+
   /**
    * abbreviation
    *
@@ -953,7 +953,7 @@ var Hacker = function (faker) {
    return faker.helpers.mustache(phrase, data);
 
   };
-  
+
   return self;
 };
 
@@ -1413,7 +1413,7 @@ var Image = function (faker) {
    */
   self.transport = function (width, height, randomize) {
     return faker.image.imageUrl(width, height, 'transport', randomize);
-  }  
+  }
 }
 
 module["exports"] = Image;
@@ -22180,7 +22180,7 @@ function Name (faker) {
       faker.name.jobArea() + " " +
       faker.name.jobType();
   };
-  
+
   /**
    * prefix
    *
@@ -22299,7 +22299,7 @@ var Phone = function (faker) {
   self.phoneFormats = function () {
     return faker.random.arrayElement(faker.definitions.phone_number.formats);
   };
-  
+
   return self;
 
 };
