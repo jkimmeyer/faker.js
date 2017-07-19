@@ -3296,7 +3296,7 @@ module["exports"] = Internet;
    * @method faker.address.streetAddress
    * @param {Boolean} useFullAddress
    */
-  this.streetAddress = function (useFullAddress) {
+  this.localStreetAddress = function (useFullAddress) {
       if (useFullAddress === undefined) { useFullAddress = false; }
       var address = "";
       switch (faker.random.number(2)) {
