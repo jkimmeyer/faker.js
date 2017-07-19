@@ -271,14 +271,16 @@ var Commerce = function (faker) {
    * @param {number} max
    * @param {number} dec
    * @param {string} symbol
+   *
+   * @return {string}
    */
   self.price = function(min, max, dec, symbol) {
       min = min || 0;
       max = max || 1000;
-      dec = dec || 2;
+      dec = dec === undefined ? 2 : dec;
       symbol = symbol || '';
 
-      if(min < 0 || max < 0) {
+      if (min < 0 || max < 0) {
           return symbol + 0.00;
       }
 
@@ -338,7 +340,7 @@ var Commerce = function (faker) {
    */
   self.product = function() {
       return faker.random.arrayElement(faker.definitions.commerce.product_name.product);
-  }
+  };
 
   return self;
 };
@@ -781,7 +783,6 @@ function Fake (faker) {
 module['exports'] = Fake;
 },{}],7:[function(require,module,exports){
 /**
- *
  * @namespace faker.finance
  */
 var Finance = function (faker) {
@@ -806,7 +807,7 @@ var Finance = function (faker) {
       }
       length = null;
       return Helpers.replaceSymbolWithNumber(template);
-  }
+  };
 
   /**
    * accountName
@@ -816,7 +817,7 @@ var Finance = function (faker) {
   self.accountName = function () {
 
       return [Helpers.randomize(faker.definitions.finance.account_type), 'Account'].join(' ');
-  }
+  };
 
   /**
    * mask
@@ -827,7 +828,6 @@ var Finance = function (faker) {
    * @param {boolean} ellipsis
    */
   self.mask = function (length, parens, ellipsis) {
-
 
       //set defaults
       length = (length == 0 || !length || typeof length == 'undefined') ? 4 : length;
@@ -850,8 +850,7 @@ var Finance = function (faker) {
       template = Helpers.replaceSymbolWithNumber(template);
 
       return template;
-
-  }
+  };
 
   //min and max take in minimum and maximum amounts, dec is the decimal place you want rounded to, symbol is $, €, £, etc
   //NOTE: this returns a string representation of the value, if you want a number use parseFloat and no symbol
@@ -864,18 +863,19 @@ var Finance = function (faker) {
    * @param {number} max
    * @param {number} dec
    * @param {string} symbol
+   *
+   * @return {string}
    */
   self.amount = function (min, max, dec, symbol) {
 
       min = min || 0;
       max = max || 1000;
-      dec = dec || 2;
+      dec = dec === undefined ? 2 : dec;
       symbol = symbol || '';
       var randValue = faker.random.number({ max: max, min: min, precision: Math.pow(10, -dec) });
 
       return symbol + randValue.toFixed(dec);
-
-  }
+  };
 
   /**
    * transactionType
@@ -884,7 +884,7 @@ var Finance = function (faker) {
    */
   self.transactionType = function () {
       return Helpers.randomize(faker.definitions.finance.transaction_type);
-  }
+  };
 
   /**
    * currencyCode
@@ -893,7 +893,7 @@ var Finance = function (faker) {
    */
   self.currencyCode = function () {
       return faker.random.objectElement(faker.definitions.finance.currency)['code'];
-  }
+  };
 
   /**
    * currencyName
@@ -902,7 +902,7 @@ var Finance = function (faker) {
    */
   self.currencyName = function () {
       return faker.random.objectElement(faker.definitions.finance.currency, 'key');
-  }
+  };
 
   /**
    * currencySymbol
@@ -916,7 +916,7 @@ var Finance = function (faker) {
           symbol = faker.random.objectElement(faker.definitions.finance.currency)['symbol'];
       }
       return symbol;
-  }
+  };
 
   /**
    * bitcoinAddress
@@ -932,7 +932,7 @@ var Finance = function (faker) {
       address += faker.random.alphaNumeric().toUpperCase();
 
     return address;
-  }
+  };
 
   /**
    * iban
@@ -979,7 +979,7 @@ var Finance = function (faker) {
       }
       var iban = ibanFormat.country + checksum + s;
       return formatted ? iban.match(/.{1,4}/g).join(" ") : iban;
-  }
+  };
 
   /**
    * bic
@@ -997,8 +997,8 @@ var Finance = function (faker) {
               Helpers.replaceSymbols("?" + faker.random.arrayElement(vowels) + "?") :
           prob < 40 ?
               Helpers.replaceSymbols("###") : "");
-  }
-}
+  };
+};
 
 module['exports'] = Finance;
 
@@ -2526,11 +2526,14 @@ var Image = function (faker) {
    * @param {boolean} randomize
    * @method faker.image.imageUrl
    */
-  self.imageUrl = function (width, height, category, randomize) {
+  self.imageUrl = function (width, height, category, randomize, https) {
       var width = width || 640;
       var height = height || 480;
-
-      var url ='http://lorempixel.com/' + width + '/' + height;
+      var protocol = 'http://';
+      if (typeof https !== 'undefined' && https === true) {
+        protocol = 'https://';
+      }
+      var url = protocol + 'lorempixel.com/' + width + '/' + height;
       if (typeof category !== 'undefined') {
         url += '/' + category;
       }
@@ -2683,7 +2686,19 @@ var Image = function (faker) {
    */
   self.transport = function (width, height, randomize) {
     return faker.image.imageUrl(width, height, 'transport', randomize);
-  }  
+  };
+  /**
+   * dataUri
+   *
+   * @param {number} width
+   * @param {number} height
+   * @method faker.image.dataurl
+   */
+  self.dataUri = function (width, height) {
+    var rawPrefix = 'data:image/svg+xml;charset=UTF-8,';
+    var svgString = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full" width="' + width + '" height="' + height + '"> <rect width="100%" height="100%" fill="grey"/>  <text x="0" y="20" font-size="20" text-anchor="start" fill="white">' + width + 'x' + height + '</text> </svg>';
+    return rawPrefix + encodeURIComponent(svgString);
+  };
 }
 
 module["exports"] = Image;
@@ -2728,59 +2743,66 @@ function Faker (opts) {
 
   self.definitions = {};
 
+  function bindAll(obj) {
+      Object.keys(obj).forEach(function(meth) {
+          if (typeof obj[meth] === 'function') {
+              obj[meth] = obj[meth].bind(obj);
+          }
+      });
+      return obj;
+  }
+
   var Fake = require('./fake');
   self.fake = new Fake(self).fake;
 
   var Random = require('./random');
-  self.random = new Random(self, opts.seed);
-  // self.random = require('./random');
+  self.random = bindAll(new Random(self));
 
   var Helpers = require('./helpers');
   self.helpers = new Helpers(self);
 
   var Name = require('./name');
-  self.name = new Name(self);
-  // self.name = require('./name');
+  self.name = bindAll(new Name(self));
 
   var Address = require('./address');
-  self.address = new Address(self);
+  self.address = bindAll(new Address(self));
 
   var Company = require('./company');
-  self.company = new Company(self);
+  self.company = bindAll(new Company(self));
 
   var Finance = require('./finance');
-  self.finance = new Finance(self);
+  self.finance = bindAll(new Finance(self));
 
   var Image = require('./image');
-  self.image = new Image(self);
+  self.image = bindAll(new Image(self));
 
   var Lorem = require('./lorem');
-  self.lorem = new Lorem(self);
+  self.lorem = bindAll(new Lorem(self));
 
   var Hacker = require('./hacker');
-  self.hacker = new Hacker(self);
+  self.hacker = bindAll(new Hacker(self));
 
   var Internet = require('./internet');
-  self.internet = new Internet(self);
+  self.internet = bindAll(new Internet(self));
 
   var Database = require('./database');
-  self.database = new Database(self);
+  self.database = bindAll(new Database(self));
 
   var Phone = require('./phone_number');
-  self.phone = new Phone(self);
+  self.phone = bindAll(new Phone(self));
 
   var _Date = require('./date');
-  self.date = new _Date(self);
+  self.date = bindAll(new _Date(self));
 
   var Commerce = require('./commerce');
-  self.commerce = new Commerce(self);
+  self.commerce = bindAll(new Commerce(self));
 
   var System = require('./system');
-  self.system = new System(self);
+  self.system = bindAll(new System(self));
 
   var _definitions = {
     "name": ["first_name", "last_name", "prefix", "suffix", "title", "male_first_name", "female_first_name", "male_middle_name", "female_middle_name", "male_last_name", "female_last_name"],
-    "address": ["city_prefix", "city_suffix", "street_suffix", "county", "country", "country_code", "state", "state_abbr", "street_prefix", "postcode"],
+    "address": ["city_prefix", "city_suffix", "street_suffix", "county", "country", "country_code", "state", "state_abbr", "street_prefix", "postcode", "street_root"],
     "company": ["adjective", "noun", "descriptor", "bs_adjective", "bs_noun", "bs_verb", "suffix"],
     "lorem": ["words"],
     "hacker": ["abbreviation", "adjective", "noun", "verb", "ingverb"],
@@ -3140,13 +3162,23 @@ var Internet = function (faker) {
    * mac
    *
    * @method faker.internet.mac
+   * @param {string} sep
    */
-  self.mac = function(){
-      var i, mac = "";
+  self.mac = function(sep){
+      var i, 
+        mac = "",
+        validSep = ':';
+
+      // if the client passed in a different separator than `:`, 
+      // we will use it if it is in the list of acceptable separators (dash or no separator)
+      if (['-', ''].indexOf(sep) !== -1) {
+        validSep = sep;
+      } 
+
       for (i=0; i < 12; i++) {
           mac+= faker.random.number(15).toString(16);
           if (i%2==1 && i != 11) {
-              mac+=":";
+              mac+=validSep;
           }
       }
       return mac;
@@ -3997,7 +4029,7 @@ module["exports"] = [
 
 },{}],34:[function(require,module,exports){
 module.exports=require(22)
-},{"/Users/a/dev/faker.js/lib/locales/az/address/state.js":22}],35:[function(require,module,exports){
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/az/address/state.js":22}],35:[function(require,module,exports){
 var date = {};
 module["exports"] = date;
 date.month = require("./month");
@@ -4313,7 +4345,7 @@ module["exports"] = [];
 
 },{}],49:[function(require,module,exports){
 module.exports=require(48)
-},{"/Users/a/dev/faker.js/lib/locales/az/name/prefix.js":48}],50:[function(require,module,exports){
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/az/name/prefix.js":48}],50:[function(require,module,exports){
 module["exports"] = [
   "(9##)###-##-##"
 ];
@@ -4918,7 +4950,7 @@ module["exports"] = [
 
 },{}],62:[function(require,module,exports){
 module.exports=require(61)
-},{"/Users/a/dev/faker.js/lib/locales/en/address/postcode.js":61}],63:[function(require,module,exports){
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/en/address/postcode.js":61}],63:[function(require,module,exports){
 module["exports"] = [
   "Apt. ###",
   "Suite ###"
@@ -5614,7 +5646,7 @@ module["exports"] = [
 
 },{}],82:[function(require,module,exports){
 arguments[4][29][0].apply(exports,arguments)
-},{"./color":80,"./department":81,"./product_name":83,"/Users/a/dev/faker.js/lib/locales/az/commerce/index.js":29}],83:[function(require,module,exports){
+},{"./color":80,"./department":81,"./product_name":83,"/Users/johanneskimmeier/Coding/faker.js/lib/locales/az/commerce/index.js":29}],83:[function(require,module,exports){
 module["exports"] = {
   "adjective": [
     "Small",
@@ -6365,7 +6397,7 @@ module["exports"] = [
 
 },{}],109:[function(require,module,exports){
 arguments[4][35][0].apply(exports,arguments)
-},{"./month":110,"./weekday":111,"/Users/a/dev/faker.js/lib/locales/az/date/index.js":35}],110:[function(require,module,exports){
+},{"./month":110,"./weekday":111,"/Users/johanneskimmeier/Coding/faker.js/lib/locales/az/date/index.js":35}],110:[function(require,module,exports){
 // Source: http://unicode.org/cldr/trac/browser/tags/release-27/common/main/en.xml#L1799
 module["exports"] = {
   wide: [
@@ -7376,10 +7408,8 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/thierrykoblentz/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/peterlandt/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/catarino/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/wr/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/weglov/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/brandclay/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/flame_kaizar/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/ahmetsulek/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/nicolasfolliot/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jayrobinson/128.jpg",
@@ -7436,7 +7466,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/herrhaase/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/RussellBishop/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/brajeshwar/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/nachtmeister/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/cbracco/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/bermonpainter/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/abdullindenis/128.jpg",
@@ -7576,12 +7605,10 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/ooomz/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/chacky14/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jesseddy/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/thinmatt/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/shanehudson/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/akmur/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/IsaryAmairani/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/arthurholcombe1/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/andychipster/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/boxmodel/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/ehsandiary/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/LucasPerdidao/128.jpg",
@@ -7705,7 +7732,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/danro/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/hiemil/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jackiesaik/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/zacsnider/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/iduuck/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/antjanus/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/aroon_sharma/128.jpg",
@@ -7740,7 +7766,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/necodymiconer/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/praveen_vijaya/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/fabbrucci/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/cliffseal/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/travishines/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/kuldarkalvik/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/Elt_n/128.jpg",
@@ -8080,7 +8105,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/dallasbpeters/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/n3dmax/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/terpimost/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/kirillz/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/byrnecore/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/j_drake_/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/calebjoyce/128.jpg",
@@ -8287,7 +8311,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/markolschesky/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/kvasnic/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/lindseyzilla/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/gauchomatt/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/afusinatto/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/kevinoh/128.jpg",
@@ -13397,7 +13420,7 @@ module["exports"] = [
 
 },{}],139:[function(require,module,exports){
 arguments[4][51][0].apply(exports,arguments)
-},{"./formats":138,"/Users/a/dev/faker.js/lib/locales/az/phone_number/index.js":51}],140:[function(require,module,exports){
+},{"./formats":138,"/Users/johanneskimmeier/Coding/faker.js/lib/locales/az/phone_number/index.js":51}],140:[function(require,module,exports){
 var system = {};
 module['exports'] = system;
 system.mimeTypes = require("./mimeTypes");
@@ -20479,8 +20502,10 @@ function Random (faker, seed) {
       max += options.precision;
     }
 
-    var randomNumber = options.precision * Math.floor(
+    var randomNumber = Math.floor(
       mersenne.rand(max / options.precision, options.min / options.precision));
+    // Workaround problem in Float point arithmetics for e.g. 6681493 / 0.01
+    randomNumber = randomNumber / (1 / options.precision);
 
     return randomNumber;
 

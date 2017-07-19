@@ -247,10 +247,8 @@ var Commerce = function (faker) {
    * department
    *
    * @method faker.commerce.department
-   * @param {number} max
-   * @param {number} fixedAmount
    */
-  self.department = function(max, fixedAmount) {
+  self.department = function() {
       return faker.random.arrayElement(faker.definitions.commerce.department);
   };
 
@@ -273,14 +271,16 @@ var Commerce = function (faker) {
    * @param {number} max
    * @param {number} dec
    * @param {string} symbol
+   *
+   * @return {string}
    */
   self.price = function(min, max, dec, symbol) {
       min = min || 0;
       max = max || 1000;
-      dec = dec || 2;
+      dec = dec === undefined ? 2 : dec;
       symbol = symbol || '';
 
-      if(min < 0 || max < 0) {
+      if (min < 0 || max < 0) {
           return symbol + 0.00;
       }
 
@@ -340,7 +340,7 @@ var Commerce = function (faker) {
    */
   self.product = function() {
       return faker.random.arrayElement(faker.definitions.commerce.product_name.product);
-  }
+  };
 
   return self;
 };
@@ -475,6 +475,72 @@ module['exports'] = Company;
 },{}],4:[function(require,module,exports){
 /**
  *
+ * @namespace faker.database
+ */
+var Database = function (faker) {
+  var self = this;
+  /**
+   * column
+   *
+   * @method faker.database.column
+   */
+  self.column = function () {
+      return faker.random.arrayElement(faker.definitions.database.column);
+  };
+
+  self.column.schema = {
+    "description": "Generates a column name.",
+    "sampleResults": ["id", "title", "createdAt"]
+  };
+
+  /**
+   * type
+   *
+   * @method faker.database.type
+   */
+  self.type = function () {
+      return faker.random.arrayElement(faker.definitions.database.type);
+  };
+
+  self.type.schema = {
+    "description": "Generates a column type.",
+    "sampleResults": ["byte", "int", "varchar", "timestamp"]
+  };
+
+  /**
+   * collation
+   *
+   * @method faker.database.collation
+   */
+  self.collation = function () {
+      return faker.random.arrayElement(faker.definitions.database.collation);
+  };
+
+  self.collation.schema = {
+    "description": "Generates a collation.",
+    "sampleResults": ["utf8_unicode_ci", "utf8_bin"]
+  };
+
+  /**
+   * engine
+   *
+   * @method faker.database.engine
+   */
+  self.engine = function () {
+      return faker.random.arrayElement(faker.definitions.database.engine);
+  };
+
+  self.engine.schema = {
+    "description": "Generates a storage engine.",
+    "sampleResults": ["MyISAM", "InnoDB"]
+  };
+};
+
+module["exports"] = Database;
+
+},{}],5:[function(require,module,exports){
+/**
+ *
  * @namespace faker.date
  */
 var _Date = function (faker) {
@@ -606,7 +672,7 @@ var _Date = function (faker) {
 };
 
 module['exports'] = _Date;
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*
   fake.js - generator method for combining faker methods based on string input
 
@@ -715,12 +781,12 @@ function Fake (faker) {
 }
 
 module['exports'] = Fake;
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
- *
  * @namespace faker.finance
  */
 var Finance = function (faker) {
+  var ibanLib = require("./iban");
   var Helpers = faker.helpers,
       self = this;
 
@@ -741,7 +807,7 @@ var Finance = function (faker) {
       }
       length = null;
       return Helpers.replaceSymbolWithNumber(template);
-  }
+  };
 
   /**
    * accountName
@@ -751,7 +817,7 @@ var Finance = function (faker) {
   self.accountName = function () {
 
       return [Helpers.randomize(faker.definitions.finance.account_type), 'Account'].join(' ');
-  }
+  };
 
   /**
    * mask
@@ -759,15 +825,14 @@ var Finance = function (faker) {
    * @method faker.finance.mask
    * @param {number} length
    * @param {boolean} parens
-   * @param {boolean} elipsis
+   * @param {boolean} ellipsis
    */
-  self.mask = function (length, parens, elipsis) {
-
+  self.mask = function (length, parens, ellipsis) {
 
       //set defaults
       length = (length == 0 || !length || typeof length == 'undefined') ? 4 : length;
       parens = (parens === null) ? true : parens;
-      elipsis = (elipsis === null) ? true : elipsis;
+      ellipsis = (ellipsis === null) ? true : ellipsis;
 
       //create a template for length
       var template = '';
@@ -776,8 +841,8 @@ var Finance = function (faker) {
           template = template + '#';
       }
 
-      //prefix with elipsis
-      template = (elipsis) ? ['...', template].join('') : template;
+      //prefix with ellipsis
+      template = (ellipsis) ? ['...', template].join('') : template;
 
       template = (parens) ? ['(', template, ')'].join('') : template;
 
@@ -785,8 +850,7 @@ var Finance = function (faker) {
       template = Helpers.replaceSymbolWithNumber(template);
 
       return template;
-
-  }
+  };
 
   //min and max take in minimum and maximum amounts, dec is the decimal place you want rounded to, symbol is $, €, £, etc
   //NOTE: this returns a string representation of the value, if you want a number use parseFloat and no symbol
@@ -799,18 +863,19 @@ var Finance = function (faker) {
    * @param {number} max
    * @param {number} dec
    * @param {string} symbol
+   *
+   * @return {string}
    */
   self.amount = function (min, max, dec, symbol) {
 
       min = min || 0;
       max = max || 1000;
-      dec = dec || 2;
+      dec = dec === undefined ? 2 : dec;
       symbol = symbol || '';
-      var randValue = faker.random.number({ max: max, min: min });
+      var randValue = faker.random.number({ max: max, min: min, precision: Math.pow(10, -dec) });
 
-      return symbol + (Math.round(randValue * Math.pow(10, dec)) / Math.pow(10, dec)).toFixed(dec);
-
-  }
+      return symbol + randValue.toFixed(dec);
+  };
 
   /**
    * transactionType
@@ -819,7 +884,7 @@ var Finance = function (faker) {
    */
   self.transactionType = function () {
       return Helpers.randomize(faker.definitions.finance.transaction_type);
-  }
+  };
 
   /**
    * currencyCode
@@ -828,7 +893,7 @@ var Finance = function (faker) {
    */
   self.currencyCode = function () {
       return faker.random.objectElement(faker.definitions.finance.currency)['code'];
-  }
+  };
 
   /**
    * currencyName
@@ -837,7 +902,7 @@ var Finance = function (faker) {
    */
   self.currencyName = function () {
       return faker.random.objectElement(faker.definitions.finance.currency, 'key');
-  }
+  };
 
   /**
    * currencySymbol
@@ -851,7 +916,7 @@ var Finance = function (faker) {
           symbol = faker.random.objectElement(faker.definitions.finance.currency)['symbol'];
       }
       return symbol;
-  }
+  };
 
   /**
    * bitcoinAddress
@@ -867,12 +932,77 @@ var Finance = function (faker) {
       address += faker.random.alphaNumeric().toUpperCase();
 
     return address;
-  }
-}
+  };
+
+  /**
+   * iban
+   *
+   * @method  faker.finance.iban
+   */
+  self.iban = function (formatted) {
+      var ibanFormat = faker.random.arrayElement(ibanLib.formats);
+      var s = "";
+      var count = 0;
+      for (var b = 0; b < ibanFormat.bban.length; b++) {
+          var bban = ibanFormat.bban[b];
+          var c = bban.count;
+          count += bban.count;
+          while (c > 0) {
+              if (bban.type == "a") {
+                  s += faker.random.arrayElement(ibanLib.alpha);
+              } else if (bban.type == "c") {
+                  if (faker.random.number(100) < 80) {
+                      s += faker.random.number(9);
+                  } else {
+                      s += faker.random.arrayElement(ibanLib.alpha);
+                  }
+              } else {
+                  if (c >= 3 && faker.random.number(100) < 30) {
+                      if (faker.random.boolean()) {
+                          s += faker.random.arrayElement(ibanLib.pattern100);
+                          c -= 2;
+                      } else {
+                          s += faker.random.arrayElement(ibanLib.pattern10);
+                          c--;
+                      }
+                  } else {
+                      s += faker.random.number(9);
+                  }
+              }
+              c--;
+          }
+          s = s.substring(0, count);
+      }
+      var checksum = 98 - ibanLib.mod97(ibanLib.toDigitString(s + ibanFormat.country + "00"));
+      if (checksum < 10) {
+          checksum = "0" + checksum;
+      }
+      var iban = ibanFormat.country + checksum + s;
+      return formatted ? iban.match(/.{1,4}/g).join(" ") : iban;
+  };
+
+  /**
+   * bic
+   *
+   * @method  faker.finance.bic
+   */
+  self.bic = function () {
+      var vowels = ["A", "E", "I", "O", "U"];
+      var prob = faker.random.number(100);
+      return Helpers.replaceSymbols("???") +
+          faker.random.arrayElement(vowels) +
+          faker.random.arrayElement(ibanLib.iso3166) +
+          Helpers.replaceSymbols("?") + "1" +
+          (prob < 10 ?
+              Helpers.replaceSymbols("?" + faker.random.arrayElement(vowels) + "?") :
+          prob < 40 ?
+              Helpers.replaceSymbols("###") : "");
+  };
+};
 
 module['exports'] = Finance;
 
-},{}],7:[function(require,module,exports){
+},{"./iban":10}],8:[function(require,module,exports){
 /**
  *
  * @namespace faker.hacker
@@ -958,7 +1088,7 @@ var Hacker = function (faker) {
 };
 
 module['exports'] = Hacker;
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  *
  * @namespace faker.helpers
@@ -1022,14 +1152,14 @@ var Helpers = function (faker) {
    */
   self.replaceSymbols = function (string) {
       string = string || "";
-  	var alpha = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+      var alpha = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
       var str = '';
 
       for (var i = 0; i < string.length; i++) {
           if (string.charAt(i) == "#") {
               str += faker.random.number(9);
-  		} else if (string.charAt(i) == "?") {
-  			str += faker.random.arrayElement(alpha);
+          } else if (string.charAt(i) == "?") {
+              str += faker.random.arrayElement(alpha);
           } else {
               str += string.charAt(i);
           }
@@ -1044,6 +1174,9 @@ var Helpers = function (faker) {
    * @param {array} o
    */
   self.shuffle = function (o) {
+      if (typeof o === 'undefined' || o.length === 0) {
+        return [];
+      }
       o = o || ["a", "b", "c"];
       for (var j, x, i = o.length-1; i; j = faker.random.number(i), x = o[--i], o[i] = o[j], o[j] = x);
       return o;
@@ -1218,7 +1351,1144 @@ String.prototype.capitalize = function () { //v1.0
 
 module['exports'] = Helpers;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+module["exports"] = {
+  alpha: [
+    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'
+  ],
+  pattern10: [
+    "01", "02", "03", "04", "05", "06", "07", "08", "09"
+  ],
+  pattern100: [
+    "001", "002", "003", "004", "005", "006", "007", "008", "009"
+  ],
+  toDigitString: function (str) {
+      return str.replace(/[A-Z]/gi, function(match) {
+          return match.toUpperCase().charCodeAt(0) - 55;
+      });
+  },
+  mod97: function (digitStr) {
+      var m = 0;
+      for (var i = 0; i < digitStr.length; i++) {
+          m = ((m * 10) + (digitStr[i] |0)) % 97;
+      }
+      return m;
+  },
+  formats: [
+    {
+      country: "AL",
+      total: 28,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "c",
+          count: 16
+        }
+      ],
+      format: "ALkk bbbs sssx cccc cccc cccc cccc"
+    },
+    {
+      country: "AD",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "c",
+          count: 12
+        }
+      ],
+      format: "ADkk bbbb ssss cccc cccc cccc"
+    },
+    {
+      country: "AT",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "n",
+          count: 11
+        }
+      ],
+      format: "ATkk bbbb bccc cccc cccc"
+    },
+    {
+      country: "AZ",
+      total: 28,
+      bban: [
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 20
+        }
+      ],
+      format: "AZkk bbbb cccc cccc cccc cccc cccc"
+    },
+    {
+      country: "BH",
+      total: 22,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 14
+        }
+      ],
+      format: "BHkk bbbb cccc cccc cccc cc"
+    },
+    {
+      country: "BE",
+      total: 16,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 9
+        }
+      ],
+      format: "BEkk bbbc cccc ccxx"
+    },
+    {
+      country: "BA",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "BAkk bbbs sscc cccc ccxx"
+    },
+    {
+      country: "BR",
+      total: 29,
+      bban: [
+        {
+          type: "n",
+          count: 13
+        },
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "a",
+          count: 1
+        },
+        {
+          type: "c",
+          count: 1
+        }
+      ],
+      format: "BRkk bbbb bbbb ssss sccc cccc ccct n"
+    },
+    {
+      country: "BG",
+      total: 22,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "c",
+          count: 8
+        }
+      ],
+      format: "BGkk bbbb ssss ddcc cccc cc"
+    },
+    {
+      country: "CR",
+      total: 21,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 14
+        }
+      ],
+      format: "CRkk bbbc cccc cccc cccc c"
+    },
+    {
+      country: "HR",
+      total: 21,
+      bban: [
+        {
+          type: "n",
+          count: 7
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "HRkk bbbb bbbc cccc cccc c"
+    },
+    {
+      country: "CY",
+      total: 28,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "c",
+          count: 16
+        }
+      ],
+      format: "CYkk bbbs ssss cccc cccc cccc cccc"
+    },
+    {
+      country: "CZ",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "CZkk bbbb ssss sscc cccc cccc"
+    },
+    {
+      country: "DK",
+      total: 18,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "DKkk bbbb cccc cccc cc"
+    },
+    {
+      country: "DO",
+      total: 28,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 20
+        }
+      ],
+      format: "DOkk bbbb cccc cccc cccc cccc cccc"
+    },
+    {
+      country: "TL",
+      total: 23,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "TLkk bbbc cccc cccc cccc cxx"
+    },
+    {
+      country: "EE",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 12
+        }
+      ],
+      format: "EEkk bbss cccc cccc cccx"
+    },
+    {
+      country: "FO",
+      total: 18,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "FOkk bbbb cccc cccc cx"
+    },
+    {
+      country: "FI",
+      total: 18,
+      bban: [
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "n",
+          count: 8
+        }
+      ],
+      format: "FIkk bbbb bbcc cccc cx"
+    },
+    {
+      country: "FR",
+      total: 27,
+      bban: [
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "c",
+          count: 11
+        },
+        {
+          type: "n",
+          count: 2
+        }
+      ],
+      format: "FRkk bbbb bggg ggcc cccc cccc cxx"
+    },
+    {
+      country: "GE",
+      total: 22,
+      bban: [
+        {
+          type: "c",
+          count: 2
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "GEkk bbcc cccc cccc cccc cc"
+    },
+    {
+      country: "DE",
+      total: 22,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "DEkk bbbb bbbb cccc cccc cc"
+    },
+    {
+      country: "GI",
+      total: 23,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 15
+        }
+      ],
+      format: "GIkk bbbb cccc cccc cccc ccc"
+    },
+    {
+      country: "GR",
+      total: 27,
+      bban: [
+        {
+          type: "n",
+          count: 7
+        },
+        {
+          type: "c",
+          count: 16
+        }
+      ],
+      format: "GRkk bbbs sssc cccc cccc cccc ccc"
+    },
+    {
+      country: "GL",
+      total: 18,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "GLkk bbbb cccc cccc cc"
+    },
+    {
+      country: "GT",
+      total: 28,
+      bban: [
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 16
+        }
+      ],
+      format: "GTkk bbbb mmtt cccc cccc cccc cccc"
+    },
+    {
+      country: "HU",
+      total: 28,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "HUkk bbbs sssk cccc cccc cccc cccx"
+    },
+    {
+      country: "IS",
+      total: 26,
+      bban: [
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "ISkk bbbb sscc cccc iiii iiii ii"
+    },
+    {
+      country: "IE",
+      total: 22,
+      bban: [
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "n",
+          count: 8
+        }
+      ],
+      format: "IEkk aaaa bbbb bbcc cccc cc"
+    },
+    {
+      country: "IL",
+      total: 23,
+      bban: [
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "n",
+          count: 13
+        }
+      ],
+      format: "ILkk bbbn nncc cccc cccc ccc"
+    },
+    {
+      country: "IT",
+      total: 27,
+      bban: [
+        {
+          type: "a",
+          count: 1
+        },
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "c",
+          count: 12
+        }
+      ],
+      format: "ITkk xaaa aabb bbbc cccc cccc ccc"
+    },
+    {
+      country: "JO",
+      total: 30,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 18
+        }
+      ],
+      format: "JOkk bbbb nnnn cccc cccc cccc cccc cc"
+    },
+    {
+      country: "KZ",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "c",
+          count: 13
+        }
+      ],
+      format: "KZkk bbbc cccc cccc cccc"
+    },
+    {
+      country: "XK",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 12
+        }
+      ],
+      format: "XKkk bbbb cccc cccc cccc"
+    },
+    {
+      country: "KW",
+      total: 30,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 22
+        }
+      ],
+      format: "KWkk bbbb cccc cccc cccc cccc cccc cc"
+    },
+    {
+      country: "LV",
+      total: 21,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 13
+        }
+      ],
+      format: "LVkk bbbb cccc cccc cccc c"
+    },
+    {
+      country: "LB",
+      total: 28,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 20
+        }
+      ],
+      format: "LBkk bbbb cccc cccc cccc cccc cccc"
+    },
+    {
+      country: "LI",
+      total: 21,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "c",
+          count: 12
+        }
+      ],
+      format: "LIkk bbbb bccc cccc cccc c"
+    },
+    {
+      country: "LT",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "n",
+          count: 11
+        }
+      ],
+      format: "LTkk bbbb bccc cccc cccc"
+    },
+    {
+      country: "LU",
+      total: 20,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "c",
+          count: 13
+        }
+      ],
+      format: "LUkk bbbc cccc cccc cccc"
+    },
+    {
+      country: "MK",
+      total: 19,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "c",
+          count: 10
+        },
+        {
+          type: "n",
+          count: 2
+        }
+      ],
+      format: "MKkk bbbc cccc cccc cxx"
+    },
+    {
+      country: "MT",
+      total: 31,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "c",
+          count: 18
+        }
+      ],
+      format: "MTkk bbbb ssss sccc cccc cccc cccc ccc"
+    },
+    {
+      country: "MR",
+      total: 27,
+      bban: [
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "n",
+          count: 13
+        }
+      ],
+      format: "MRkk bbbb bsss sscc cccc cccc cxx"
+    },
+    {
+      country: "MU",
+      total: 30,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 15
+        },
+        {
+          type: "a",
+          count: 3
+        }
+      ],
+      format: "MUkk bbbb bbss cccc cccc cccc 000d dd"
+    },
+    {
+      country: "MC",
+      total: 27,
+      bban: [
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "c",
+          count: 11
+        },
+        {
+          type: "n",
+          count: 2
+        }
+      ],
+      format: "MCkk bbbb bsss sscc cccc cccc cxx"
+    },
+    {
+      country: "MD",
+      total: 24,
+      bban: [
+        {
+          type: "c",
+          count: 2
+        },
+        {
+          type: "c",
+          count: 18
+        }
+      ],
+      format: "MDkk bbcc cccc cccc cccc cccc"
+    },
+    {
+      country: "ME",
+      total: 22,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 15
+        }
+      ],
+      format: "MEkk bbbc cccc cccc cccc xx"
+    },
+    {
+      country: "NL",
+      total: 18,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "NLkk bbbb cccc cccc cc"
+    },
+    {
+      country: "NO",
+      total: 15,
+      bban: [
+        {
+          type: "n",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 7
+        }
+      ],
+      format: "NOkk bbbb cccc ccx"
+    },
+    {
+      country: "PK",
+      total: 24,
+      bban: [
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "PKkk bbbb cccc cccc cccc cccc"
+    },
+    {
+      country: "PS",
+      total: 29,
+      bban: [
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 9
+        },
+        {
+          type: "n",
+          count: 12
+        }
+      ],
+      format: "PSkk bbbb xxxx xxxx xccc cccc cccc c"
+    },
+    {
+      country: "PL",
+      total: 28,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "PLkk bbbs sssx cccc cccc cccc cccc"
+    },
+    {
+      country: "PT",
+      total: 25,
+      bban: [
+        {
+          type: "n",
+          count: 8
+        },
+        {
+          type: "n",
+          count: 13
+        }
+      ],
+      format: "PTkk bbbb ssss cccc cccc cccx x"
+    },
+    {
+      country: "QA",
+      total: 29,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 21
+        }
+      ],
+      format: "QAkk bbbb cccc cccc cccc cccc cccc c"
+    },
+    {
+      country: "RO",
+      total: 24,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "c",
+          count: 16
+        }
+      ],
+      format: "ROkk bbbb cccc cccc cccc cccc"
+    },
+    {
+      country: "SM",
+      total: 27,
+      bban: [
+        {
+          type: "a",
+          count: 1
+        },
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "c",
+          count: 12
+        }
+      ],
+      format: "SMkk xaaa aabb bbbc cccc cccc ccc"
+    },
+    {
+      country: "SA",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 2
+        },
+        {
+          type: "c",
+          count: 18
+        }
+      ],
+      format: "SAkk bbcc cccc cccc cccc cccc"
+    },
+    {
+      country: "RS",
+      total: 22,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 15
+        }
+      ],
+      format: "RSkk bbbc cccc cccc cccc xx"
+    },
+    {
+      country: "SK",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "SKkk bbbb ssss sscc cccc cccc"
+    },
+    {
+      country: "SI",
+      total: 19,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "SIkk bbss sccc cccc cxx"
+    },
+    {
+      country: "ES",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 10
+        },
+        {
+          type: "n",
+          count: 10
+        }
+      ],
+      format: "ESkk bbbb gggg xxcc cccc cccc"
+    },
+    {
+      country: "SE",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 17
+        }
+      ],
+      format: "SEkk bbbc cccc cccc cccc cccc"
+    },
+    {
+      country: "CH",
+      total: 21,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "c",
+          count: 12
+        }
+      ],
+      format: "CHkk bbbb bccc cccc cccc c"
+    },
+    {
+      country: "TN",
+      total: 24,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "n",
+          count: 15
+        }
+      ],
+      format: "TNkk bbss sccc cccc cccc cccc"
+    },
+    {
+      country: "TR",
+      total: 26,
+      bban: [
+        {
+          type: "n",
+          count: 5
+        },
+        {
+          type: "c",
+          count: 1
+        },
+        {
+          type: "c",
+          count: 16
+        }
+      ],
+      format: "TRkk bbbb bxcc cccc cccc cccc cc"
+    },
+    {
+      country: "AE",
+      total: 23,
+      bban: [
+        {
+          type: "n",
+          count: 3
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "AEkk bbbc cccc cccc cccc ccc"
+    },
+    {
+      country: "GB",
+      total: 22,
+      bban: [
+        {
+          type: "a",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 6
+        },
+        {
+          type: "n",
+          count: 8
+        }
+      ],
+      format: "GBkk bbbb ssss sscc cccc cc"
+    },
+    {
+      country: "VG",
+      total: 24,
+      bban: [
+        {
+          type: "c",
+          count: 4
+        },
+        {
+          type: "n",
+          count: 16
+        }
+      ],
+      format: "VGkk bbbb cccc cccc cccc cccc"
+    }
+  ],
+  iso3166: [
+    "AC", "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AN", "AO", "AQ", "AR", "AS",
+    "AT", "AU", "AW", "AX", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI",
+    "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS", "BT", "BU", "BV", "BW", "BY",
+    "BZ", "CA", "CC", "CD", "CE", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
+    "CO", "CP", "CR", "CS", "CS", "CU", "CV", "CW", "CX", "CY", "CZ", "DD", "DE",
+    "DG", "DJ", "DK", "DM", "DO", "DZ", "EA", "EC", "EE", "EG", "EH", "ER", "ES",
+    "ET", "EU", "FI", "FJ", "FK", "FM", "FO", "FR", "FX", "GA", "GB", "GD", "GE",
+    "GF", "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU",
+    "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "IC", "ID", "IE", "IL", "IM",
+    "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM", "JO", "JP", "KE", "KG", "KH",
+    "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC", "LI", "LK",
+    "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH",
+    "MK", "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW",
+    "MX", "MY", "MZ", "NA", "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR",
+    "NT", "NU", "NZ", "OM", "PA", "PE", "PF", "PG", "PH", "PK", "PL", "PM", "PN",
+    "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW", "SA", "SB",
+    "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR",
+    "SS", "ST", "SU", "SV", "SX", "SY", "SZ", "TA", "TC", "TD", "TF", "TG", "TH",
+    "TJ", "TK", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "UA", "UG",
+    "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI", "VN", "VU", "WF", "WS",
+    "YE", "YT", "YU", "ZA", "ZM", "ZR", "ZW"
+  ]
+}
+},{}],11:[function(require,module,exports){
 /**
  *
  * @namespace faker.image
@@ -1256,11 +2526,14 @@ var Image = function (faker) {
    * @param {boolean} randomize
    * @method faker.image.imageUrl
    */
-  self.imageUrl = function (width, height, category, randomize) {
+  self.imageUrl = function (width, height, category, randomize, https) {
       var width = width || 640;
       var height = height || 480;
-
-      var url ='http://lorempixel.com/' + width + '/' + height;
+      var protocol = 'http://';
+      if (typeof https !== 'undefined' && https === true) {
+        protocol = 'https://';
+      }
+      var url = protocol + 'lorempixel.com/' + width + '/' + height;
       if (typeof category !== 'undefined') {
         url += '/' + category;
       }
@@ -1413,11 +2686,23 @@ var Image = function (faker) {
    */
   self.transport = function (width, height, randomize) {
     return faker.image.imageUrl(width, height, 'transport', randomize);
-  }  
+  };
+  /**
+   * dataUri
+   *
+   * @param {number} width
+   * @param {number} height
+   * @method faker.image.dataurl
+   */
+  self.dataUri = function (width, height) {
+    var rawPrefix = 'data:image/svg+xml;charset=UTF-8,';
+    var svgString = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full" width="' + width + '" height="' + height + '"> <rect width="100%" height="100%" fill="grey"/>  <text x="0" y="20" font-size="20" text-anchor="start" fill="white">' + width + 'x' + height + '</text> </svg>';
+    return rawPrefix + encodeURIComponent(svgString);
+  };
 }
 
 module["exports"] = Image;
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /*
 
    this index.js file is used for including the faker library as a CommonJS module, instead of a bundle
@@ -1458,70 +2743,81 @@ function Faker (opts) {
 
   self.definitions = {};
 
+  function bindAll(obj) {
+      Object.keys(obj).forEach(function(meth) {
+          if (typeof obj[meth] === 'function') {
+              obj[meth] = obj[meth].bind(obj);
+          }
+      });
+      return obj;
+  }
+
   var Fake = require('./fake');
   self.fake = new Fake(self).fake;
 
   var Random = require('./random');
-  self.random = new Random(self);
-  // self.random = require('./random');
+  self.random = bindAll(new Random(self));
 
   var Helpers = require('./helpers');
   self.helpers = new Helpers(self);
 
   var Name = require('./name');
-  self.name = new Name(self);
-  // self.name = require('./name');
+  self.name = bindAll(new Name(self));
 
   var Address = require('./address');
-  self.address = new Address(self);
+  self.address = bindAll(new Address(self));
 
   var Company = require('./company');
-  self.company = new Company(self);
+  self.company = bindAll(new Company(self));
 
   var Finance = require('./finance');
-  self.finance = new Finance(self);
+  self.finance = bindAll(new Finance(self));
 
   var Image = require('./image');
-  self.image = new Image(self);
+  self.image = bindAll(new Image(self));
 
   var Lorem = require('./lorem');
-  self.lorem = new Lorem(self);
+  self.lorem = bindAll(new Lorem(self));
 
   var Hacker = require('./hacker');
-  self.hacker = new Hacker(self);
+  self.hacker = bindAll(new Hacker(self));
 
   var Internet = require('./internet');
-  self.internet = new Internet(self);
+  self.internet = bindAll(new Internet(self));
+
+  var Database = require('./database');
+  self.database = bindAll(new Database(self));
 
   var Phone = require('./phone_number');
-  self.phone = new Phone(self);
+  self.phone = bindAll(new Phone(self));
 
   var _Date = require('./date');
-  self.date = new _Date(self);
+  self.date = bindAll(new _Date(self));
 
   var Commerce = require('./commerce');
-  self.commerce = new Commerce(self);
+  self.commerce = bindAll(new Commerce(self));
 
   var System = require('./system');
-  self.system = new System(self);
+  self.system = bindAll(new System(self));
 
   var _definitions = {
     "name": ["first_name", "last_name", "prefix", "suffix", "title", "male_first_name", "female_first_name", "male_middle_name", "female_middle_name", "male_last_name", "female_last_name"],
-    "address": ["city_prefix", "city_suffix", "street_suffix", "county", "country", "country_code", "state", "state_abbr", "street_prefix", "postcode"],
+    "address": ["city_prefix", "city_suffix", "street_suffix", "county", "country", "country_code", "state", "state_abbr", "street_prefix", "postcode", "street_root"],
     "company": ["adjective", "noun", "descriptor", "bs_adjective", "bs_noun", "bs_verb", "suffix"],
     "lorem": ["words"],
     "hacker": ["abbreviation", "adjective", "noun", "verb", "ingverb"],
     "phone_number": ["formats"],
-    "finance": ["account_type", "transaction_type", "currency"],
+    "finance": ["account_type", "transaction_type", "currency", "iban"],
     "internet": ["avatar_uri", "domain_suffix", "free_email", "example_email", "password"],
     "commerce": ["color", "department", "product_name", "price", "categories"],
+    "database": ["collation", "column", "engine", "type"],
     "system": ["mimeTypes"],
     "date": ["month", "weekday"],
     "title": "",
     "separator": ""
   };
 
-  // Create a Getter for all definitions.foo.bar propetries
+  // Create a Getter for all definitions.foo.bar properties
   Object.keys(_definitions).forEach(function(d){
     if (typeof self.definitions[d] === "undefined") {
       self.definitions[d] = {};
@@ -1537,7 +2833,7 @@ function Faker (opts) {
         get: function () {
           if (typeof self.locales[self.locale][d] === "undefined" || typeof self.locales[self.locale][d][p] === "undefined") {
             // certain localization sets contain less data then others.
-            // in the case of a missing defintion, use the default localeFallback to substitute the missing set data
+            // in the case of a missing definition, use the default localeFallback to substitute the missing set data
             // throw new Error('unknown property ' + d + p)
             return self.locales[localeFallback][d][p];
           } else {
@@ -1558,9 +2854,8 @@ Faker.prototype.seed = function(value) {
 }
 module['exports'] = Faker;
 
-},{"./address":1,"./commerce":2,"./company":3,"./date":4,"./fake":5,"./finance":6,"./hacker":7,"./helpers":8,"./image":9,"./internet":11,"./lorem":134,"./name":135,"./phone_number":136,"./random":137,"./system":138}],11:[function(require,module,exports){
-var password_generator = require('../vendor/password-generator.js'),
-    random_ua = require('../vendor/user-agent');
+},{"./address":1,"./commerce":2,"./company":3,"./database":4,"./date":5,"./fake":6,"./finance":7,"./hacker":8,"./helpers":9,"./image":11,"./internet":13,"./lorem":128,"./name":129,"./phone_number":130,"./random":131,"./system":132}],13:[function(require,module,exports){
+var random_ua = require('../vendor/user-agent');
 
 /**
  *
@@ -1776,6 +3071,32 @@ var Internet = function (faker) {
   };
 
   /**
+   * ipv6
+   *
+   * @method faker.internet.ipv6
+   */
+  self.ipv6 = function () {
+      var randHash = function () {
+          var result = "";
+          for (var i = 0; i < 4; i++) {
+            result += (faker.random.arrayElement(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]));
+          }
+          return result
+      };
+
+      var result = [];
+      for (var i = 0; i < 8; i++) {
+        result[i] = randHash();
+      }
+      return result.join(":");
+  };
+
+  self.ipv6.schema = {
+    "description": "Generates a random IPv6 address.",
+    "sampleResults": ["2001:0db8:6276:b1a7:5213:22f1:25df:c8a0"]
+  };
+
+  /**
    * userAgent
    *
    * @method faker.internet.userAgent
@@ -1841,13 +3162,23 @@ var Internet = function (faker) {
    * mac
    *
    * @method faker.internet.mac
+   * @param {string} sep
    */
-  self.mac = function(){
-      var i, mac = "";
+  self.mac = function(sep){
+      var i, 
+        mac = "",
+        validSep = ':';
+
+      // if the client passed in a different separator than `:`, 
+      // we will use it if it is in the list of acceptable separators (dash or no separator)
+      if (['-', ''].indexOf(sep) !== -1) {
+        validSep = sep;
+      } 
+
       for (i=0; i < 12; i++) {
           mac+= faker.random.number(15).toString(16);
           if (i%2==1 && i != 11) {
-              mac+=":";
+              mac+=validSep;
           }
       }
       return mac;
@@ -1867,13 +3198,56 @@ var Internet = function (faker) {
    * @param {string} pattern
    * @param {string} prefix
    */
-  self.password = function (len, memorable, pattern, prefix) {
-    len = len || 15;
-    if (typeof memorable === "undefined") {
-      memorable = false;
-    }
-    return password_generator(len, memorable, pattern, prefix);
-  }
+   self.password = function (len, memorable, pattern, prefix) {
+     len = len || 15;
+     if (typeof memorable === "undefined") {
+       memorable = false;
+     }
+     /*
+      * password-generator ( function )
+      * Copyright(c) 2011-2013 Bermi Ferrer <bermi@bermilabs.com>
+      * MIT Licensed
+      */
+     var consonant, letter, password, vowel;
+     letter = /[a-zA-Z]$/;
+     vowel = /[aeiouAEIOU]$/;
+     consonant = /[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]$/;
+     var _password = function (length, memorable, pattern, prefix) {
+       var char, n;
+       if (length == null) {
+         length = 10;
+       }
+       if (memorable == null) {
+         memorable = true;
+       }
+       if (pattern == null) {
+         pattern = /\w/;
+       }
+       if (prefix == null) {
+         prefix = '';
+       }
+       if (prefix.length >= length) {
+         return prefix;
+       }
+       if (memorable) {
+         if (prefix.match(consonant)) {
+           pattern = vowel;
+         } else {
+           pattern = consonant;
+         }
+       }
+       n = faker.random.number(94) + 33;
+       char = String.fromCharCode(n);
+       if (memorable) {
+         char = char.toLowerCase();
+       }
+       if (!char.match(pattern)) {
+         return _password(length, memorable, pattern, prefix);
+       }
+       return _password(length, memorable, pattern, "" + prefix + char);
+     };
+     return _password(len, memorable, pattern, prefix);
+   }
 
   self.password.schema = {
     "description": "Generates a random password.",
@@ -1910,1424 +3284,54 @@ var Internet = function (faker) {
 
 module["exports"] = Internet;
 
-},{"../vendor/password-generator.js":141,"../vendor/user-agent":142}],12:[function(require,module,exports){
-module["exports"] = [
-  "###",
-  "##",
-  "#",
-  "##a",
-  "##b",
-  "##c"
-];
+},{"../vendor/user-agent":135}],14:[function(require,module,exports){
+ function Address (faker) {
 
-},{}],13:[function(require,module,exports){
-module["exports"] = [
-  "#{city_prefix} #{Name.first_name}#{city_suffix}",
-  "#{city_prefix} #{Name.first_name}",
-  "#{Name.first_name}#{city_suffix}",
-  "#{Name.last_name}#{city_suffix}"
-];
+  //
+  // TODO: change all these methods that accept a boolean to instead accept an options hash.
+  //
+  /**
+   * Returns a random localized street address
+   *
+   * @method faker.address.streetAddress
+   * @param {Boolean} useFullAddress
+   */
+  this.streetAddress = function (useFullAddress) {
+      if (useFullAddress === undefined) { useFullAddress = false; }
+      var address = "";
+      switch (faker.random.number(2)) {
+      case 0:
+          address = faker.random.arrayElement(faker.locales[faker.locale].address.street_root) + " " + Helpers.replaceSymbolWithNumber("#");
+          break;
+      case 1:
+          address = faker.random.arrayElement(faker.locales[faker.locale].address.street_root) + " " + Helpers.replaceSymbolWithNumber("##");
+          break;
+      }
+      return useFullAddress ? (address + " " + faker.address.secondaryAddress()) : address;
+  }
+}
 
-},{}],14:[function(require,module,exports){
-module["exports"] = [
-  "Nord",
-  "Ost",
-  "West",
-  "Süd",
-  "Neu",
-  "Alt",
-  "Bad"
-];
+module.exports = Address;
 
 },{}],15:[function(require,module,exports){
-module["exports"] = [
-  "stadt",
-  "dorf",
-  "land",
-  "scheid",
-  "burg"
-];
-
-},{}],16:[function(require,module,exports){
-module["exports"] = [
-  "Ägypten",
-  "Äquatorialguinea",
-  "Äthiopien",
-  "Österreich",
-  "Afghanistan",
-  "Albanien",
-  "Algerien",
-  "Amerikanisch-Samoa",
-  "Amerikanische Jungferninseln",
-  "Andorra",
-  "Angola",
-  "Anguilla",
-  "Antarktis",
-  "Antigua und Barbuda",
-  "Argentinien",
-  "Armenien",
-  "Aruba",
-  "Aserbaidschan",
-  "Australien",
-  "Bahamas",
-  "Bahrain",
-  "Bangladesch",
-  "Barbados",
-  "Belarus",
-  "Belgien",
-  "Belize",
-  "Benin",
-  "die Bermudas",
-  "Bhutan",
-  "Bolivien",
-  "Bosnien und Herzegowina",
-  "Botsuana",
-  "Bouvetinsel",
-  "Brasilien",
-  "Britische Jungferninseln",
-  "Britisches Territorium im Indischen Ozean",
-  "Brunei Darussalam",
-  "Bulgarien",
-  "Burkina Faso",
-  "Burundi",
-  "Chile",
-  "China",
-  "Cookinseln",
-  "Costa Rica",
-  "Dänemark",
-  "Demokratische Republik Kongo",
-  "Demokratische Volksrepublik Korea",
-  "Deutschland",
-  "Dominica",
-  "Dominikanische Republik",
-  "Dschibuti",
-  "Ecuador",
-  "El Salvador",
-  "Eritrea",
-  "Estland",
-  "Färöer",
-  "Falklandinseln",
-  "Fidschi",
-  "Finnland",
-  "Frankreich",
-  "Französisch-Guayana",
-  "Französisch-Polynesien",
-  "Französische Gebiete im südlichen Indischen Ozean",
-  "Gabun",
-  "Gambia",
-  "Georgien",
-  "Ghana",
-  "Gibraltar",
-  "Grönland",
-  "Grenada",
-  "Griechenland",
-  "Guadeloupe",
-  "Guam",
-  "Guatemala",
-  "Guinea",
-  "Guinea-Bissau",
-  "Guyana",
-  "Haiti",
-  "Heard und McDonaldinseln",
-  "Honduras",
-  "Hongkong",
-  "Indien",
-  "Indonesien",
-  "Irak",
-  "Iran",
-  "Irland",
-  "Island",
-  "Israel",
-  "Italien",
-  "Jamaika",
-  "Japan",
-  "Jemen",
-  "Jordanien",
-  "Jugoslawien",
-  "Kaimaninseln",
-  "Kambodscha",
-  "Kamerun",
-  "Kanada",
-  "Kap Verde",
-  "Kasachstan",
-  "Katar",
-  "Kenia",
-  "Kirgisistan",
-  "Kiribati",
-  "Kleinere amerikanische Überseeinseln",
-  "Kokosinseln",
-  "Kolumbien",
-  "Komoren",
-  "Kongo",
-  "Kroatien",
-  "Kuba",
-  "Kuwait",
-  "Laos",
-  "Lesotho",
-  "Lettland",
-  "Libanon",
-  "Liberia",
-  "Libyen",
-  "Liechtenstein",
-  "Litauen",
-  "Luxemburg",
-  "Macau",
-  "Madagaskar",
-  "Malawi",
-  "Malaysia",
-  "Malediven",
-  "Mali",
-  "Malta",
-  "ehemalige jugoslawische Republik Mazedonien",
-  "Marokko",
-  "Marshallinseln",
-  "Martinique",
-  "Mauretanien",
-  "Mauritius",
-  "Mayotte",
-  "Mexiko",
-  "Mikronesien",
-  "Monaco",
-  "Mongolei",
-  "Montserrat",
-  "Mosambik",
-  "Myanmar",
-  "Nördliche Marianen",
-  "Namibia",
-  "Nauru",
-  "Nepal",
-  "Neukaledonien",
-  "Neuseeland",
-  "Nicaragua",
-  "Niederländische Antillen",
-  "Niederlande",
-  "Niger",
-  "Nigeria",
-  "Niue",
-  "Norfolkinsel",
-  "Norwegen",
-  "Oman",
-  "Osttimor",
-  "Pakistan",
-  "Palau",
-  "Panama",
-  "Papua-Neuguinea",
-  "Paraguay",
-  "Peru",
-  "Philippinen",
-  "Pitcairninseln",
-  "Polen",
-  "Portugal",
-  "Puerto Rico",
-  "Réunion",
-  "Republik Korea",
-  "Republik Moldau",
-  "Ruanda",
-  "Rumänien",
-  "Russische Föderation",
-  "São Tomé und Príncipe",
-  "Südafrika",
-  "Südgeorgien und Südliche Sandwichinseln",
-  "Salomonen",
-  "Sambia",
-  "Samoa",
-  "San Marino",
-  "Saudi-Arabien",
-  "Schweden",
-  "Schweiz",
-  "Senegal",
-  "Seychellen",
-  "Sierra Leone",
-  "Simbabwe",
-  "Singapur",
-  "Slowakei",
-  "Slowenien",
-  "Somalien",
-  "Spanien",
-  "Sri Lanka",
-  "St. Helena",
-  "St. Kitts und Nevis",
-  "St. Lucia",
-  "St. Pierre und Miquelon",
-  "St. Vincent und die Grenadinen",
-  "Sudan",
-  "Surinam",
-  "Svalbard und Jan Mayen",
-  "Swasiland",
-  "Syrien",
-  "Türkei",
-  "Tadschikistan",
-  "Taiwan",
-  "Tansania",
-  "Thailand",
-  "Togo",
-  "Tokelau",
-  "Tonga",
-  "Trinidad und Tobago",
-  "Tschad",
-  "Tschechische Republik",
-  "Tunesien",
-  "Turkmenistan",
-  "Turks- und Caicosinseln",
-  "Tuvalu",
-  "Uganda",
-  "Ukraine",
-  "Ungarn",
-  "Uruguay",
-  "Usbekistan",
-  "Vanuatu",
-  "Vatikanstadt",
-  "Venezuela",
-  "Vereinigte Arabische Emirate",
-  "Vereinigte Staaten",
-  "Vereinigtes Königreich",
-  "Vietnam",
-  "Wallis und Futuna",
-  "Weihnachtsinsel",
-  "Westsahara",
-  "Zentralafrikanische Republik",
-  "Zypern"
-];
-
-},{}],17:[function(require,module,exports){
-module["exports"] = [
-  "Deutschland"
-];
-
-},{}],18:[function(require,module,exports){
-var address = {};
-module['exports'] = address;
-address.city_prefix = require("./city_prefix");
-address.city_suffix = require("./city_suffix");
-address.country = require("./country");
-address.street_root = require("./street_root");
-address.building_number = require("./building_number");
-address.secondary_address = require("./secondary_address");
-address.postcode = require("./postcode");
-address.state = require("./state");
-address.state_abbr = require("./state_abbr");
-address.city = require("./city");
-address.street_name = require("./street_name");
-address.street_address = require("./street_address");
-address.default_country = require("./default_country");
-
-},{"./building_number":12,"./city":13,"./city_prefix":14,"./city_suffix":15,"./country":16,"./default_country":17,"./postcode":19,"./secondary_address":20,"./state":21,"./state_abbr":22,"./street_address":23,"./street_name":24,"./street_root":25}],19:[function(require,module,exports){
-module["exports"] = [
-  "#####",
-  "#####"
-];
-
-},{}],20:[function(require,module,exports){
-module["exports"] = [
-  "Apt. ###",
-  "Zimmer ###",
-  "# OG"
-];
-
-},{}],21:[function(require,module,exports){
-module["exports"] = [
-  "Baden-Württemberg",
-  "Bayern",
-  "Berlin",
-  "Brandenburg",
-  "Bremen",
-  "Hamburg",
-  "Hessen",
-  "Mecklenburg-Vorpommern",
-  "Niedersachsen",
-  "Nordrhein-Westfalen",
-  "Rheinland-Pfalz",
-  "Saarland",
-  "Sachsen",
-  "Sachsen-Anhalt",
-  "Schleswig-Holstein",
-  "Thüringen"
-];
-
-},{}],22:[function(require,module,exports){
-module["exports"] = [
-  "BW",
-  "BY",
-  "BE",
-  "BB",
-  "HB",
-  "HH",
-  "HE",
-  "MV",
-  "NI",
-  "NW",
-  "RP",
-  "SL",
-  "SN",
-  "ST",
-  "SH",
-  "TH"
-];
-
-},{}],23:[function(require,module,exports){
-module["exports"] = [
-  "#{street_name} #{building_number}"
-];
-
-},{}],24:[function(require,module,exports){
-module["exports"] = [
-  "#{street_root}"
-];
-
-},{}],25:[function(require,module,exports){
-module["exports"] = [
-  "Ackerweg",
-  "Adalbert-Stifter-Str.",
-  "Adalbertstr.",
-  "Adolf-Baeyer-Str.",
-  "Adolf-Kaschny-Str.",
-  "Adolf-Reichwein-Str.",
-  "Adolfsstr.",
-  "Ahornweg",
-  "Ahrstr.",
-  "Akazienweg",
-  "Albert-Einstein-Str.",
-  "Albert-Schweitzer-Str.",
-  "Albertus-Magnus-Str.",
-  "Albert-Zarthe-Weg",
-  "Albin-Edelmann-Str.",
-  "Albrecht-Haushofer-Str.",
-  "Aldegundisstr.",
-  "Alexanderstr.",
-  "Alfred-Delp-Str.",
-  "Alfred-Kubin-Str.",
-  "Alfred-Stock-Str.",
-  "Alkenrather Str.",
-  "Allensteiner Str.",
-  "Alsenstr.",
-  "Alt Steinbücheler Weg",
-  "Alte Garten",
-  "Alte Heide",
-  "Alte Landstr.",
-  "Alte Ziegelei",
-  "Altenberger Str.",
-  "Altenhof",
-  "Alter Grenzweg",
-  "Altstadtstr.",
-  "Am Alten Gaswerk",
-  "Am Alten Schafstall",
-  "Am Arenzberg",
-  "Am Benthal",
-  "Am Birkenberg",
-  "Am Blauen Berg",
-  "Am Borsberg",
-  "Am Brungen",
-  "Am Büchelter Hof",
-  "Am Buttermarkt",
-  "Am Ehrenfriedhof",
-  "Am Eselsdamm",
-  "Am Falkenberg",
-  "Am Frankenberg",
-  "Am Gesundheitspark",
-  "Am Gierlichshof",
-  "Am Graben",
-  "Am Hagelkreuz",
-  "Am Hang",
-  "Am Heidkamp",
-  "Am Hemmelrather Hof",
-  "Am Hofacker",
-  "Am Hohen Ufer",
-  "Am Höllers Eck",
-  "Am Hühnerberg",
-  "Am Jägerhof",
-  "Am Junkernkamp",
-  "Am Kemperstiegel",
-  "Am Kettnersbusch",
-  "Am Kiesberg",
-  "Am Klösterchen",
-  "Am Knechtsgraben",
-  "Am Köllerweg",
-  "Am Köttersbach",
-  "Am Kreispark",
-  "Am Kronefeld",
-  "Am Küchenhof",
-  "Am Kühnsbusch",
-  "Am Lindenfeld",
-  "Am Märchen",
-  "Am Mittelberg",
-  "Am Mönchshof",
-  "Am Mühlenbach",
-  "Am Neuenhof",
-  "Am Nonnenbruch",
-  "Am Plattenbusch",
-  "Am Quettinger Feld",
-  "Am Rosenhügel",
-  "Am Sandberg",
-  "Am Scherfenbrand",
-  "Am Schokker",
-  "Am Silbersee",
-  "Am Sonnenhang",
-  "Am Sportplatz",
-  "Am Stadtpark",
-  "Am Steinberg",
-  "Am Telegraf",
-  "Am Thelenhof",
-  "Am Vogelkreuz",
-  "Am Vogelsang",
-  "Am Vogelsfeldchen",
-  "Am Wambacher Hof",
-  "Am Wasserturm",
-  "Am Weidenbusch",
-  "Am Weiher",
-  "Am Weingarten",
-  "Am Werth",
-  "Amselweg",
-  "An den Irlen",
-  "An den Rheinauen",
-  "An der Bergerweide",
-  "An der Dingbank",
-  "An der Evangelischen Kirche",
-  "An der Evgl. Kirche",
-  "An der Feldgasse",
-  "An der Fettehenne",
-  "An der Kante",
-  "An der Laach",
-  "An der Lehmkuhle",
-  "An der Lichtenburg",
-  "An der Luisenburg",
-  "An der Robertsburg",
-  "An der Schmitten",
-  "An der Schusterinsel",
-  "An der Steinrütsch",
-  "An St. Andreas",
-  "An St. Remigius",
-  "Andreasstr.",
-  "Ankerweg",
-  "Annette-Kolb-Str.",
-  "Apenrader Str.",
-  "Arnold-Ohletz-Str.",
-  "Atzlenbacher Str.",
-  "Auerweg",
-  "Auestr.",
-  "Auf dem Acker",
-  "Auf dem Blahnenhof",
-  "Auf dem Bohnbüchel",
-  "Auf dem Bruch",
-  "Auf dem End",
-  "Auf dem Forst",
-  "Auf dem Herberg",
-  "Auf dem Lehn",
-  "Auf dem Stein",
-  "Auf dem Weierberg",
-  "Auf dem Weiherhahn",
-  "Auf den Reien",
-  "Auf der Donnen",
-  "Auf der Grieße",
-  "Auf der Ohmer",
-  "Auf der Weide",
-  "Auf'm Berg",
-  "Auf'm Kamp",
-  "Augustastr.",
-  "August-Kekulé-Str.",
-  "A.-W.-v.-Hofmann-Str.",
-  "Bahnallee",
-  "Bahnhofstr.",
-  "Baltrumstr.",
-  "Bamberger Str.",
-  "Baumberger Str.",
-  "Bebelstr.",
-  "Beckers Kämpchen",
-  "Beerenstr.",
-  "Beethovenstr.",
-  "Behringstr.",
-  "Bendenweg",
-  "Bensberger Str.",
-  "Benzstr.",
-  "Bergische Landstr.",
-  "Bergstr.",
-  "Berliner Platz",
-  "Berliner Str.",
-  "Bernhard-Letterhaus-Str.",
-  "Bernhard-Lichtenberg-Str.",
-  "Bernhard-Ridder-Str.",
-  "Bernsteinstr.",
-  "Bertha-Middelhauve-Str.",
-  "Bertha-von-Suttner-Str.",
-  "Bertolt-Brecht-Str.",
-  "Berzeliusstr.",
-  "Bielertstr.",
-  "Biesenbach",
-  "Billrothstr.",
-  "Birkenbergstr.",
-  "Birkengartenstr.",
-  "Birkenweg",
-  "Bismarckstr.",
-  "Bitterfelder Str.",
-  "Blankenburg",
-  "Blaukehlchenweg",
-  "Blütenstr.",
-  "Boberstr.",
-  "Böcklerstr.",
-  "Bodelschwinghstr.",
-  "Bodestr.",
-  "Bogenstr.",
-  "Bohnenkampsweg",
-  "Bohofsweg",
-  "Bonifatiusstr.",
-  "Bonner Str.",
-  "Borkumstr.",
-  "Bornheimer Str.",
-  "Borsigstr.",
-  "Borussiastr.",
-  "Bracknellstr.",
-  "Brahmsweg",
-  "Brandenburger Str.",
-  "Breidenbachstr.",
-  "Breslauer Str.",
-  "Bruchhauser Str.",
-  "Brückenstr.",
-  "Brucknerstr.",
-  "Brüder-Bonhoeffer-Str.",
-  "Buchenweg",
-  "Bürgerbuschweg",
-  "Burgloch",
-  "Burgplatz",
-  "Burgstr.",
-  "Burgweg",
-  "Bürriger Weg",
-  "Burscheider Str.",
-  "Buschkämpchen",
-  "Butterheider Str.",
-  "Carl-Duisberg-Platz",
-  "Carl-Duisberg-Str.",
-  "Carl-Leverkus-Str.",
-  "Carl-Maria-von-Weber-Platz",
-  "Carl-Maria-von-Weber-Str.",
-  "Carlo-Mierendorff-Str.",
-  "Carl-Rumpff-Str.",
-  "Carl-von-Ossietzky-Str.",
-  "Charlottenburger Str.",
-  "Christian-Heß-Str.",
-  "Claasbruch",
-  "Clemens-Winkler-Str.",
-  "Concordiastr.",
-  "Cranachstr.",
-  "Dahlemer Str.",
-  "Daimlerstr.",
-  "Damaschkestr.",
-  "Danziger Str.",
-  "Debengasse",
-  "Dechant-Fein-Str.",
-  "Dechant-Krey-Str.",
-  "Deichtorstr.",
-  "Dhünnberg",
-  "Dhünnstr.",
-  "Dianastr.",
-  "Diedenhofener Str.",
-  "Diepental",
-  "Diepenthaler Str.",
-  "Dieselstr.",
-  "Dillinger Str.",
-  "Distelkamp",
-  "Dohrgasse",
-  "Domblick",
-  "Dönhoffstr.",
-  "Dornierstr.",
-  "Drachenfelsstr.",
-  "Dr.-August-Blank-Str.",
-  "Dresdener Str.",
-  "Driescher Hecke",
-  "Drosselweg",
-  "Dudweilerstr.",
-  "Dünenweg",
-  "Dünfelder Str.",
-  "Dünnwalder Grenzweg",
-  "Düppeler Str.",
-  "Dürerstr.",
-  "Dürscheider Weg",
-  "Düsseldorfer Str.",
-  "Edelrather Weg",
-  "Edmund-Husserl-Str.",
-  "Eduard-Spranger-Str.",
-  "Ehrlichstr.",
-  "Eichenkamp",
-  "Eichenweg",
-  "Eidechsenweg",
-  "Eifelstr.",
-  "Eifgenstr.",
-  "Eintrachtstr.",
-  "Elbestr.",
-  "Elisabeth-Langgässer-Str.",
-  "Elisabethstr.",
-  "Elisabeth-von-Thadden-Str.",
-  "Elisenstr.",
-  "Elsa-Brändström-Str.",
-  "Elsbachstr.",
-  "Else-Lasker-Schüler-Str.",
-  "Elsterstr.",
-  "Emil-Fischer-Str.",
-  "Emil-Nolde-Str.",
-  "Engelbertstr.",
-  "Engstenberger Weg",
-  "Entenpfuhl",
-  "Erbelegasse",
-  "Erftstr.",
-  "Erfurter Str.",
-  "Erich-Heckel-Str.",
-  "Erich-Klausener-Str.",
-  "Erich-Ollenhauer-Str.",
-  "Erlenweg",
-  "Ernst-Bloch-Str.",
-  "Ernst-Ludwig-Kirchner-Str.",
-  "Erzbergerstr.",
-  "Eschenallee",
-  "Eschenweg",
-  "Esmarchstr.",
-  "Espenweg",
-  "Euckenstr.",
-  "Eulengasse",
-  "Eulenkamp",
-  "Ewald-Flamme-Str.",
-  "Ewald-Röll-Str.",
-  "Fährstr.",
-  "Farnweg",
-  "Fasanenweg",
-  "Faßbacher Hof",
-  "Felderstr.",
-  "Feldkampstr.",
-  "Feldsiefer Weg",
-  "Feldsiefer Wiesen",
-  "Feldstr.",
-  "Feldtorstr.",
-  "Felix-von-Roll-Str.",
-  "Ferdinand-Lassalle-Str.",
-  "Fester Weg",
-  "Feuerbachstr.",
-  "Feuerdornweg",
-  "Fichtenweg",
-  "Fichtestr.",
-  "Finkelsteinstr.",
-  "Finkenweg",
-  "Fixheider Str.",
-  "Flabbenhäuschen",
-  "Flensburger Str.",
-  "Fliederweg",
-  "Florastr.",
-  "Florianweg",
-  "Flotowstr.",
-  "Flurstr.",
-  "Föhrenweg",
-  "Fontanestr.",
-  "Forellental",
-  "Fortunastr.",
-  "Franz-Esser-Str.",
-  "Franz-Hitze-Str.",
-  "Franz-Kail-Str.",
-  "Franz-Marc-Str.",
-  "Freiburger Str.",
-  "Freiheitstr.",
-  "Freiherr-vom-Stein-Str.",
-  "Freudenthal",
-  "Freudenthaler Weg",
-  "Fridtjof-Nansen-Str.",
-  "Friedenberger Str.",
-  "Friedensstr.",
-  "Friedhofstr.",
-  "Friedlandstr.",
-  "Friedlieb-Ferdinand-Runge-Str.",
-  "Friedrich-Bayer-Str.",
-  "Friedrich-Bergius-Platz",
-  "Friedrich-Ebert-Platz",
-  "Friedrich-Ebert-Str.",
-  "Friedrich-Engels-Str.",
-  "Friedrich-List-Str.",
-  "Friedrich-Naumann-Str.",
-  "Friedrich-Sertürner-Str.",
-  "Friedrichstr.",
-  "Friedrich-Weskott-Str.",
-  "Friesenweg",
-  "Frischenberg",
-  "Fritz-Erler-Str.",
-  "Fritz-Henseler-Str.",
-  "Fröbelstr.",
-  "Fürstenbergplatz",
-  "Fürstenbergstr.",
-  "Gabriele-Münter-Str.",
-  "Gartenstr.",
-  "Gebhardstr.",
-  "Geibelstr.",
-  "Gellertstr.",
-  "Georg-von-Vollmar-Str.",
-  "Gerhard-Domagk-Str.",
-  "Gerhart-Hauptmann-Str.",
-  "Gerichtsstr.",
-  "Geschwister-Scholl-Str.",
-  "Gezelinallee",
-  "Gierener Weg",
-  "Ginsterweg",
-  "Gisbert-Cremer-Str.",
-  "Glücksburger Str.",
-  "Gluckstr.",
-  "Gneisenaustr.",
-  "Goetheplatz",
-  "Goethestr.",
-  "Golo-Mann-Str.",
-  "Görlitzer Str.",
-  "Görresstr.",
-  "Graebestr.",
-  "Graf-Galen-Platz",
-  "Gregor-Mendel-Str.",
-  "Greifswalder Str.",
-  "Grillenweg",
-  "Gronenborner Weg",
-  "Große Kirchstr.",
-  "Grunder Wiesen",
-  "Grundermühle",
-  "Grundermühlenhof",
-  "Grundermühlenweg",
-  "Grüner Weg",
-  "Grunewaldstr.",
-  "Grünstr.",
-  "Günther-Weisenborn-Str.",
-  "Gustav-Freytag-Str.",
-  "Gustav-Heinemann-Str.",
-  "Gustav-Radbruch-Str.",
-  "Gut Reuschenberg",
-  "Gutenbergstr.",
-  "Haberstr.",
-  "Habichtgasse",
-  "Hafenstr.",
-  "Hagenauer Str.",
-  "Hahnenblecher",
-  "Halenseestr.",
-  "Halfenleimbach",
-  "Hallesche Str.",
-  "Halligstr.",
-  "Hamberger Str.",
-  "Hammerweg",
-  "Händelstr.",
-  "Hannah-Höch-Str.",
-  "Hans-Arp-Str.",
-  "Hans-Gerhard-Str.",
-  "Hans-Sachs-Str.",
-  "Hans-Schlehahn-Str.",
-  "Hans-von-Dohnanyi-Str.",
-  "Hardenbergstr.",
-  "Haselweg",
-  "Hauptstr.",
-  "Haus-Vorster-Str.",
-  "Hauweg",
-  "Havelstr.",
-  "Havensteinstr.",
-  "Haydnstr.",
-  "Hebbelstr.",
-  "Heckenweg",
-  "Heerweg",
-  "Hegelstr.",
-  "Heidberg",
-  "Heidehöhe",
-  "Heidestr.",
-  "Heimstättenweg",
-  "Heinrich-Böll-Str.",
-  "Heinrich-Brüning-Str.",
-  "Heinrich-Claes-Str.",
-  "Heinrich-Heine-Str.",
-  "Heinrich-Hörlein-Str.",
-  "Heinrich-Lübke-Str.",
-  "Heinrich-Lützenkirchen-Weg",
-  "Heinrichstr.",
-  "Heinrich-Strerath-Str.",
-  "Heinrich-von-Kleist-Str.",
-  "Heinrich-von-Stephan-Str.",
-  "Heisterbachstr.",
-  "Helenenstr.",
-  "Helmestr.",
-  "Hemmelrather Weg",
-  "Henry-T.-v.-Böttinger-Str.",
-  "Herderstr.",
-  "Heribertstr.",
-  "Hermann-Ehlers-Str.",
-  "Hermann-Hesse-Str.",
-  "Hermann-König-Str.",
-  "Hermann-Löns-Str.",
-  "Hermann-Milde-Str.",
-  "Hermann-Nörrenberg-Str.",
-  "Hermann-von-Helmholtz-Str.",
-  "Hermann-Waibel-Str.",
-  "Herzogstr.",
-  "Heymannstr.",
-  "Hindenburgstr.",
-  "Hirzenberg",
-  "Hitdorfer Kirchweg",
-  "Hitdorfer Str.",
-  "Höfer Mühle",
-  "Höfer Weg",
-  "Hohe Str.",
-  "Höhenstr.",
-  "Höltgestal",
-  "Holunderweg",
-  "Holzer Weg",
-  "Holzer Wiesen",
-  "Hornpottweg",
-  "Hubertusweg",
-  "Hufelandstr.",
-  "Hufer Weg",
-  "Humboldtstr.",
-  "Hummelsheim",
-  "Hummelweg",
-  "Humperdinckstr.",
-  "Hüscheider Gärten",
-  "Hüscheider Str.",
-  "Hütte",
-  "Ilmstr.",
-  "Im Bergischen Heim",
-  "Im Bruch",
-  "Im Buchenhain",
-  "Im Bühl",
-  "Im Burgfeld",
-  "Im Dorf",
-  "Im Eisholz",
-  "Im Friedenstal",
-  "Im Frohental",
-  "Im Grunde",
-  "Im Hederichsfeld",
-  "Im Jücherfeld",
-  "Im Kalkfeld",
-  "Im Kirberg",
-  "Im Kirchfeld",
-  "Im Kreuzbruch",
-  "Im Mühlenfeld",
-  "Im Nesselrader Kamp",
-  "Im Oberdorf",
-  "Im Oberfeld",
-  "Im Rosengarten",
-  "Im Rottland",
-  "Im Scheffengarten",
-  "Im Staderfeld",
-  "Im Steinfeld",
-  "Im Weidenblech",
-  "Im Winkel",
-  "Im Ziegelfeld",
-  "Imbach",
-  "Imbacher Weg",
-  "Immenweg",
-  "In den Blechenhöfen",
-  "In den Dehlen",
-  "In der Birkenau",
-  "In der Dasladen",
-  "In der Felderhütten",
-  "In der Hartmannswiese",
-  "In der Höhle",
-  "In der Schaafsdellen",
-  "In der Wasserkuhl",
-  "In der Wüste",
-  "In Holzhausen",
-  "Insterstr.",
-  "Jacob-Fröhlen-Str.",
-  "Jägerstr.",
-  "Jahnstr.",
-  "Jakob-Eulenberg-Weg",
-  "Jakobistr.",
-  "Jakob-Kaiser-Str.",
-  "Jenaer Str.",
-  "Johannes-Baptist-Str.",
-  "Johannes-Dott-Str.",
-  "Johannes-Popitz-Str.",
-  "Johannes-Wislicenus-Str.",
-  "Johannisburger Str.",
-  "Johann-Janssen-Str.",
-  "Johann-Wirtz-Weg",
-  "Josefstr.",
-  "Jüch",
-  "Julius-Doms-Str.",
-  "Julius-Leber-Str.",
-  "Kaiserplatz",
-  "Kaiserstr.",
-  "Kaiser-Wilhelm-Allee",
-  "Kalkstr.",
-  "Kämpchenstr.",
-  "Kämpenwiese",
-  "Kämper Weg",
-  "Kamptalweg",
-  "Kanalstr.",
-  "Kandinskystr.",
-  "Kantstr.",
-  "Kapellenstr.",
-  "Karl-Arnold-Str.",
-  "Karl-Bosch-Str.",
-  "Karl-Bückart-Str.",
-  "Karl-Carstens-Ring",
-  "Karl-Friedrich-Goerdeler-Str.",
-  "Karl-Jaspers-Str.",
-  "Karl-König-Str.",
-  "Karl-Krekeler-Str.",
-  "Karl-Marx-Str.",
-  "Karlstr.",
-  "Karl-Ulitzka-Str.",
-  "Karl-Wichmann-Str.",
-  "Karl-Wingchen-Str.",
-  "Käsenbrod",
-  "Käthe-Kollwitz-Str.",
-  "Katzbachstr.",
-  "Kerschensteinerstr.",
-  "Kiefernweg",
-  "Kieler Str.",
-  "Kieselstr.",
-  "Kiesweg",
-  "Kinderhausen",
-  "Kleiberweg",
-  "Kleine Kirchstr.",
-  "Kleingansweg",
-  "Kleinheider Weg",
-  "Klief",
-  "Kneippstr.",
-  "Knochenbergsweg",
-  "Kochergarten",
-  "Kocherstr.",
-  "Kockelsberg",
-  "Kolberger Str.",
-  "Kolmarer Str.",
-  "Kölner Gasse",
-  "Kölner Str.",
-  "Kolpingstr.",
-  "Königsberger Platz",
-  "Konrad-Adenauer-Platz",
-  "Köpenicker Str.",
-  "Kopernikusstr.",
-  "Körnerstr.",
-  "Köschenberg",
-  "Köttershof",
-  "Kreuzbroicher Str.",
-  "Kreuzkamp",
-  "Krummer Weg",
-  "Kruppstr.",
-  "Kuhlmannweg",
-  "Kump",
-  "Kumper Weg",
-  "Kunstfeldstr.",
-  "Küppersteger Str.",
-  "Kursiefen",
-  "Kursiefer Weg",
-  "Kurtekottenweg",
-  "Kurt-Schumacher-Ring",
-  "Kyllstr.",
-  "Langenfelder Str.",
-  "Längsleimbach",
-  "Lärchenweg",
-  "Legienstr.",
-  "Lehner Mühle",
-  "Leichlinger Str.",
-  "Leimbacher Hof",
-  "Leinestr.",
-  "Leineweberstr.",
-  "Leipziger Str.",
-  "Lerchengasse",
-  "Lessingstr.",
-  "Libellenweg",
-  "Lichstr.",
-  "Liebigstr.",
-  "Lindenstr.",
-  "Lingenfeld",
-  "Linienstr.",
-  "Lippe",
-  "Löchergraben",
-  "Löfflerstr.",
-  "Loheweg",
-  "Lohrbergstr.",
-  "Lohrstr.",
-  "Löhstr.",
-  "Lortzingstr.",
-  "Lötzener Str.",
-  "Löwenburgstr.",
-  "Lucasstr.",
-  "Ludwig-Erhard-Platz",
-  "Ludwig-Girtler-Str.",
-  "Ludwig-Knorr-Str.",
-  "Luisenstr.",
-  "Lupinenweg",
-  "Lurchenweg",
-  "Lützenkirchener Str.",
-  "Lycker Str.",
-  "Maashofstr.",
-  "Manforter Str.",
-  "Marc-Chagall-Str.",
-  "Maria-Dresen-Str.",
-  "Maria-Terwiel-Str.",
-  "Marie-Curie-Str.",
-  "Marienburger Str.",
-  "Mariendorfer Str.",
-  "Marienwerderstr.",
-  "Marie-Schlei-Str.",
-  "Marktplatz",
-  "Markusweg",
-  "Martin-Buber-Str.",
-  "Martin-Heidegger-Str.",
-  "Martin-Luther-Str.",
-  "Masurenstr.",
-  "Mathildenweg",
-  "Maurinusstr.",
-  "Mauspfad",
-  "Max-Beckmann-Str.",
-  "Max-Delbrück-Str.",
-  "Max-Ernst-Str.",
-  "Max-Holthausen-Platz",
-  "Max-Horkheimer-Str.",
-  "Max-Liebermann-Str.",
-  "Max-Pechstein-Str.",
-  "Max-Planck-Str.",
-  "Max-Scheler-Str.",
-  "Max-Schönenberg-Str.",
-  "Maybachstr.",
-  "Meckhofer Feld",
-  "Meisenweg",
-  "Memelstr.",
-  "Menchendahler Str.",
-  "Mendelssohnstr.",
-  "Merziger Str.",
-  "Mettlacher Str.",
-  "Metzer Str.",
-  "Michaelsweg",
-  "Miselohestr.",
-  "Mittelstr.",
-  "Mohlenstr.",
-  "Moltkestr.",
-  "Monheimer Str.",
-  "Montanusstr.",
-  "Montessoriweg",
-  "Moosweg",
-  "Morsbroicher Str.",
-  "Moselstr.",
-  "Moskauer Str.",
-  "Mozartstr.",
-  "Mühlenweg",
-  "Muhrgasse",
-  "Muldestr.",
-  "Mülhausener Str.",
-  "Mülheimer Str.",
-  "Münsters Gäßchen",
-  "Münzstr.",
-  "Müritzstr.",
-  "Myliusstr.",
-  "Nachtigallenweg",
-  "Nauener Str.",
-  "Neißestr.",
-  "Nelly-Sachs-Str.",
-  "Netzestr.",
-  "Neuendriesch",
-  "Neuenhausgasse",
-  "Neuenkamp",
-  "Neujudenhof",
-  "Neukronenberger Str.",
-  "Neustadtstr.",
-  "Nicolai-Hartmann-Str.",
-  "Niederblecher",
-  "Niederfeldstr.",
-  "Nietzschestr.",
-  "Nikolaus-Groß-Str.",
-  "Nobelstr.",
-  "Norderneystr.",
-  "Nordstr.",
-  "Ober dem Hof",
-  "Obere Lindenstr.",
-  "Obere Str.",
-  "Oberölbach",
-  "Odenthaler Str.",
-  "Oderstr.",
-  "Okerstr.",
-  "Olof-Palme-Str.",
-  "Ophovener Str.",
-  "Opladener Platz",
-  "Opladener Str.",
-  "Ortelsburger Str.",
-  "Oskar-Moll-Str.",
-  "Oskar-Schlemmer-Str.",
-  "Oststr.",
-  "Oswald-Spengler-Str.",
-  "Otto-Dix-Str.",
-  "Otto-Grimm-Str.",
-  "Otto-Hahn-Str.",
-  "Otto-Müller-Str.",
-  "Otto-Stange-Str.",
-  "Ottostr.",
-  "Otto-Varnhagen-Str.",
-  "Otto-Wels-Str.",
-  "Ottweilerstr.",
-  "Oulustr.",
-  "Overfeldweg",
-  "Pappelweg",
-  "Paracelsusstr.",
-  "Parkstr.",
-  "Pastor-Louis-Str.",
-  "Pastor-Scheibler-Str.",
-  "Pastorskamp",
-  "Paul-Klee-Str.",
-  "Paul-Löbe-Str.",
-  "Paulstr.",
-  "Peenestr.",
-  "Pescher Busch",
-  "Peschstr.",
-  "Pestalozzistr.",
-  "Peter-Grieß-Str.",
-  "Peter-Joseph-Lenné-Str.",
-  "Peter-Neuenheuser-Str.",
-  "Petersbergstr.",
-  "Peterstr.",
-  "Pfarrer-Jekel-Str.",
-  "Pfarrer-Klein-Str.",
-  "Pfarrer-Röhr-Str.",
-  "Pfeilshofstr.",
-  "Philipp-Ott-Str.",
-  "Piet-Mondrian-Str.",
-  "Platanenweg",
-  "Pommernstr.",
-  "Porschestr.",
-  "Poststr.",
-  "Potsdamer Str.",
-  "Pregelstr.",
-  "Prießnitzstr.",
-  "Pützdelle",
-  "Quarzstr.",
-  "Quettinger Str.",
-  "Rat-Deycks-Str.",
-  "Rathenaustr.",
-  "Ratherkämp",
-  "Ratiborer Str.",
-  "Raushofstr.",
-  "Regensburger Str.",
-  "Reinickendorfer Str.",
-  "Renkgasse",
-  "Rennbaumplatz",
-  "Rennbaumstr.",
-  "Reuschenberger Str.",
-  "Reusrather Str.",
-  "Reuterstr.",
-  "Rheinallee",
-  "Rheindorfer Str.",
-  "Rheinstr.",
-  "Rhein-Wupper-Platz",
-  "Richard-Wagner-Str.",
-  "Rilkestr.",
-  "Ringstr.",
-  "Robert-Blum-Str.",
-  "Robert-Koch-Str.",
-  "Robert-Medenwald-Str.",
-  "Rolandstr.",
-  "Romberg",
-  "Röntgenstr.",
-  "Roonstr.",
-  "Ropenstall",
-  "Ropenstaller Weg",
-  "Rosenthal",
-  "Rostocker Str.",
-  "Rotdornweg",
-  "Röttgerweg",
-  "Rückertstr.",
-  "Rudolf-Breitscheid-Str.",
-  "Rudolf-Mann-Platz",
-  "Rudolf-Stracke-Str.",
-  "Ruhlachplatz",
-  "Ruhlachstr.",
-  "Rüttersweg",
-  "Saalestr.",
-  "Saarbrücker Str.",
-  "Saarlauterner Str.",
-  "Saarstr.",
-  "Salamanderweg",
-  "Samlandstr.",
-  "Sanddornstr.",
-  "Sandstr.",
-  "Sauerbruchstr.",
-  "Schäfershütte",
-  "Scharnhorststr.",
-  "Scheffershof",
-  "Scheidemannstr.",
-  "Schellingstr.",
-  "Schenkendorfstr.",
-  "Schießbergstr.",
-  "Schillerstr.",
-  "Schlangenhecke",
-  "Schlebuscher Heide",
-  "Schlebuscher Str.",
-  "Schlebuschrath",
-  "Schlehdornstr.",
-  "Schleiermacherstr.",
-  "Schloßstr.",
-  "Schmalenbruch",
-  "Schnepfenflucht",
-  "Schöffenweg",
-  "Schöllerstr.",
-  "Schöne Aussicht",
-  "Schöneberger Str.",
-  "Schopenhauerstr.",
-  "Schubertplatz",
-  "Schubertstr.",
-  "Schulberg",
-  "Schulstr.",
-  "Schumannstr.",
-  "Schwalbenweg",
-  "Schwarzastr.",
-  "Sebastianusweg",
-  "Semmelweisstr.",
-  "Siebelplatz",
-  "Siemensstr.",
-  "Solinger Str.",
-  "Sonderburger Str.",
-  "Spandauer Str.",
-  "Speestr.",
-  "Sperberweg",
-  "Sperlingsweg",
-  "Spitzwegstr.",
-  "Sporrenberger Mühle",
-  "Spreestr.",
-  "St. Ingberter Str.",
-  "Starenweg",
-  "Stauffenbergstr.",
-  "Stefan-Zweig-Str.",
-  "Stegerwaldstr.",
-  "Steglitzer Str.",
-  "Steinbücheler Feld",
-  "Steinbücheler Str.",
-  "Steinstr.",
-  "Steinweg",
-  "Stephan-Lochner-Str.",
-  "Stephanusstr.",
-  "Stettiner Str.",
-  "Stixchesstr.",
-  "Stöckenstr.",
-  "Stralsunder Str.",
-  "Straßburger Str.",
-  "Stresemannplatz",
-  "Strombergstr.",
-  "Stromstr.",
-  "Stüttekofener Str.",
-  "Sudestr.",
-  "Sürderstr.",
-  "Syltstr.",
-  "Talstr.",
-  "Tannenbergstr.",
-  "Tannenweg",
-  "Taubenweg",
-  "Teitscheider Weg",
-  "Telegrafenstr.",
-  "Teltower Str.",
-  "Tempelhofer Str.",
-  "Theodor-Adorno-Str.",
-  "Theodor-Fliedner-Str.",
-  "Theodor-Gierath-Str.",
-  "Theodor-Haubach-Str.",
-  "Theodor-Heuss-Ring",
-  "Theodor-Storm-Str.",
-  "Theodorstr.",
-  "Thomas-Dehler-Str.",
-  "Thomas-Morus-Str.",
-  "Thomas-von-Aquin-Str.",
-  "Tönges Feld",
-  "Torstr.",
-  "Treptower Str.",
-  "Treuburger Str.",
-  "Uhlandstr.",
-  "Ulmenweg",
-  "Ulmer Str.",
-  "Ulrichstr.",
-  "Ulrich-von-Hassell-Str.",
-  "Umlag",
-  "Unstrutstr.",
-  "Unter dem Schildchen",
-  "Unterölbach",
-  "Unterstr.",
-  "Uppersberg",
-  "Van\\'t-Hoff-Str.",
-  "Veit-Stoß-Str.",
-  "Vereinsstr.",
-  "Viktor-Meyer-Str.",
-  "Vincent-van-Gogh-Str.",
-  "Virchowstr.",
-  "Voigtslach",
-  "Volhardstr.",
-  "Völklinger Str.",
-  "Von-Brentano-Str.",
-  "Von-Diergardt-Str.",
-  "Von-Eichendorff-Str.",
-  "Von-Ketteler-Str.",
-  "Von-Knoeringen-Str.",
-  "Von-Pettenkofer-Str.",
-  "Von-Siebold-Str.",
-  "Wacholderweg",
-  "Waldstr.",
-  "Walter-Flex-Str.",
-  "Walter-Hempel-Str.",
-  "Walter-Hochapfel-Str.",
-  "Walter-Nernst-Str.",
-  "Wannseestr.",
-  "Warnowstr.",
-  "Warthestr.",
-  "Weddigenstr.",
-  "Weichselstr.",
-  "Weidenstr.",
-  "Weidfeldstr.",
-  "Weiherfeld",
-  "Weiherstr.",
-  "Weinhäuser Str.",
-  "Weißdornweg",
-  "Weißenseestr.",
-  "Weizkamp",
-  "Werftstr.",
-  "Werkstättenstr.",
-  "Werner-Heisenberg-Str.",
-  "Werrastr.",
-  "Weyerweg",
-  "Widdauener Str.",
-  "Wiebertshof",
-  "Wiehbachtal",
-  "Wiembachallee",
-  "Wiesdorfer Platz",
-  "Wiesenstr.",
-  "Wilhelm-Busch-Str.",
-  "Wilhelm-Hastrich-Str.",
-  "Wilhelm-Leuschner-Str.",
-  "Wilhelm-Liebknecht-Str.",
-  "Wilhelmsgasse",
-  "Wilhelmstr.",
-  "Willi-Baumeister-Str.",
-  "Willy-Brandt-Ring",
-  "Winand-Rossi-Str.",
-  "Windthorststr.",
-  "Winkelweg",
-  "Winterberg",
-  "Wittenbergstr.",
-  "Wolf-Vostell-Str.",
-  "Wolkenburgstr.",
-  "Wupperstr.",
-  "Wuppertalstr.",
-  "Wüstenhof",
-  "Yitzhak-Rabin-Str.",
-  "Zauberkuhle",
-  "Zedernweg",
-  "Zehlendorfer Str.",
-  "Zehntenweg",
-  "Zeisigweg",
-  "Zeppelinstr.",
-  "Zschopaustr.",
-  "Zum Claashäuschen",
-  "Zündhütchenweg",
-  "Zur Alten Brauerei",
-  "Zur alten Fabrik"
-];
-
-},{}],26:[function(require,module,exports){
 module["exports"] = [
   "+49-1##-#######",
   "+49-1###-########"
 ];
 
-},{}],27:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var cell_phone = {};
 module['exports'] = cell_phone;
 cell_phone.formats = require("./formats");
 
-},{"./formats":26}],28:[function(require,module,exports){
+},{"./formats":15}],17:[function(require,module,exports){
 var company = {};
 module['exports'] = company;
 company.suffix = require("./suffix");
 company.legal_form = require("./legal_form");
 company.name = require("./name");
 
-},{"./legal_form":29,"./name":30,"./suffix":31}],29:[function(require,module,exports){
+},{"./legal_form":18,"./name":19,"./suffix":20}],18:[function(require,module,exports){
 module["exports"] = [
   "GmbH",
   "AG",
@@ -3338,16 +3342,16 @@ module["exports"] = [
   "OHG"
 ];
 
-},{}],30:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 module["exports"] = [
   "#{Name.last_name} #{suffix}",
   "#{Name.last_name}-#{Name.last_name}",
   "#{Name.last_name}, #{Name.last_name} und #{Name.last_name}"
 ];
 
-},{}],31:[function(require,module,exports){
-module.exports=require(29)
-},{"/Users/a/dev/faker.js/lib/locales/de/company/legal_form.js":29}],32:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+module.exports=require(18)
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/de/company/legal_form.js":18}],21:[function(require,module,exports){
 var de = {};
 module['exports'] = de;
 de.title = "German";
@@ -3358,7 +3362,20 @@ de.lorem = require("./lorem");
 de.name = require("./name");
 de.phone_number = require("./phone_number");
 de.cell_phone = require("./cell_phone");
-},{"./address":18,"./cell_phone":27,"./company":28,"./internet":35,"./lorem":36,"./name":39,"./phone_number":45}],33:[function(require,module,exports){
+var self = this;
+var Address = require('./address');
+self.address = bindAll(new Address(self));
+
+function bindAll(obj) {
+    Object.keys(obj).forEach(function(meth) {
+        if (typeof obj[meth] === 'function') {
+            obj[meth] = obj[meth].bind(obj);
+        }
+    });
+    return obj;
+}
+
+},{"./address":14,"./cell_phone":16,"./company":17,"./internet":24,"./lorem":25,"./name":28,"./phone_number":34}],22:[function(require,module,exports){
 module["exports"] = [
   "com",
   "info",
@@ -3369,25 +3386,25 @@ module["exports"] = [
   "ch"
 ];
 
-},{}],34:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module["exports"] = [
   "gmail.com",
   "yahoo.com",
   "hotmail.com"
 ];
 
-},{}],35:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var internet = {};
 module['exports'] = internet;
 internet.free_email = require("./free_email");
 internet.domain_suffix = require("./domain_suffix");
 
-},{"./domain_suffix":33,"./free_email":34}],36:[function(require,module,exports){
+},{"./domain_suffix":22,"./free_email":23}],25:[function(require,module,exports){
 var lorem = {};
 module['exports'] = lorem;
 lorem.words = require("./words");
 
-},{"./words":37}],37:[function(require,module,exports){
+},{"./words":26}],26:[function(require,module,exports){
 module["exports"] = [
   "alias",
   "consequatur",
@@ -3640,7 +3657,7 @@ module["exports"] = [
   "repellat"
 ];
 
-},{}],38:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 module["exports"] = [
   "Aaron",
   "Abdul",
@@ -4799,7 +4816,7 @@ module["exports"] = [
   "Zoé"
 ];
 
-},{}],39:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 var name = {};
 module['exports'] = name;
 name.first_name = require("./first_name");
@@ -4808,7 +4825,7 @@ name.prefix = require("./prefix");
 name.nobility_title_prefix = require("./nobility_title_prefix");
 name.name = require("./name");
 
-},{"./first_name":38,"./last_name":40,"./name":41,"./nobility_title_prefix":42,"./prefix":43}],40:[function(require,module,exports){
+},{"./first_name":27,"./last_name":29,"./name":30,"./nobility_title_prefix":31,"./prefix":32}],29:[function(require,module,exports){
 module["exports"] = [
   "Abel",
   "Abicht",
@@ -6501,7 +6518,7 @@ module["exports"] = [
   "Überacker"
 ];
 
-},{}],41:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 module["exports"] = [
   "#{prefix} #{first_name} #{last_name}",
   "#{first_name} #{nobility_title_prefix} #{last_name}",
@@ -6511,7 +6528,7 @@ module["exports"] = [
   "#{first_name} #{last_name}"
 ];
 
-},{}],42:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 module["exports"] = [
   "zu",
   "von",
@@ -6519,7 +6536,7 @@ module["exports"] = [
   "von der"
 ];
 
-},{}],43:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 module["exports"] = [
   "Hr.",
   "Fr.",
@@ -6527,7 +6544,7 @@ module["exports"] = [
   "Prof. Dr."
 ];
 
-},{}],44:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 module["exports"] = [
   "(0###) #########",
   "(0####) #######",
@@ -6535,21 +6552,27 @@ module["exports"] = [
   "+49-####-########"
 ];
 
-},{}],45:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 var phone_number = {};
 module['exports'] = phone_number;
 phone_number.formats = require("./formats");
 
-},{"./formats":44}],46:[function(require,module,exports){
+},{"./formats":33}],35:[function(require,module,exports){
 module["exports"] = [
   "#####",
   "####",
   "###"
 ];
 
-},{}],47:[function(require,module,exports){
-module.exports=require(13)
-},{"/Users/a/dev/faker.js/lib/locales/de/address/city.js":13}],48:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
+module["exports"] = [
+  "#{city_prefix} #{Name.first_name}#{city_suffix}",
+  "#{city_prefix} #{Name.first_name}",
+  "#{Name.first_name}#{city_suffix}",
+  "#{Name.last_name}#{city_suffix}"
+];
+
+},{}],37:[function(require,module,exports){
 module["exports"] = [
   "North",
   "East",
@@ -6560,7 +6583,7 @@ module["exports"] = [
   "Port"
 ];
 
-},{}],49:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 module["exports"] = [
   "town",
   "ton",
@@ -6583,7 +6606,7 @@ module["exports"] = [
   "shire"
 ];
 
-},{}],50:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 module["exports"] = [
   "Afghanistan",
   "Albania",
@@ -6633,7 +6656,6 @@ module["exports"] = [
   "Cocos (Keeling) Islands",
   "Colombia",
   "Comoros",
-  "Congo",
   "Congo",
   "Cook Islands",
   "Costa Rica",
@@ -6832,7 +6854,7 @@ module["exports"] = [
   "Zimbabwe"
 ];
 
-},{}],51:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 module["exports"] = [
   "AD",
   "AE",
@@ -7086,7 +7108,7 @@ module["exports"] = [
   "ZW"
 ];
 
-},{}],52:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 module["exports"] = [
   "Avon",
   "Bedfordshire",
@@ -7096,12 +7118,12 @@ module["exports"] = [
   "Cambridgeshire"
 ];
 
-},{}],53:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 module["exports"] = [
   "United States of America"
 ];
 
-},{}],54:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var address = {};
 module['exports'] = address;
 address.city_prefix = require("./city_prefix");
@@ -7122,21 +7144,21 @@ address.street_name = require("./street_name");
 address.street_address = require("./street_address");
 address.default_country = require("./default_country");
 
-},{"./building_number":46,"./city":47,"./city_prefix":48,"./city_suffix":49,"./country":50,"./country_code":51,"./county":52,"./default_country":53,"./postcode":55,"./postcode_by_state":56,"./secondary_address":57,"./state":58,"./state_abbr":59,"./street_address":60,"./street_name":61,"./street_suffix":62,"./time_zone":63}],55:[function(require,module,exports){
+},{"./building_number":35,"./city":36,"./city_prefix":37,"./city_suffix":38,"./country":39,"./country_code":40,"./county":41,"./default_country":42,"./postcode":44,"./postcode_by_state":45,"./secondary_address":46,"./state":47,"./state_abbr":48,"./street_address":49,"./street_name":50,"./street_suffix":51,"./time_zone":52}],44:[function(require,module,exports){
 module["exports"] = [
   "#####",
   "#####-####"
 ];
 
-},{}],56:[function(require,module,exports){
-module.exports=require(55)
-},{"/Users/a/dev/faker.js/lib/locales/en/address/postcode.js":55}],57:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
+module.exports=require(44)
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/en/address/postcode.js":44}],46:[function(require,module,exports){
 module["exports"] = [
   "Apt. ###",
   "Suite ###"
 ];
 
-},{}],58:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module["exports"] = [
   "Alabama",
   "Alaska",
@@ -7190,7 +7212,7 @@ module["exports"] = [
   "Wyoming"
 ];
 
-},{}],59:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 module["exports"] = [
   "AL",
   "AK",
@@ -7244,18 +7266,18 @@ module["exports"] = [
   "WY"
 ];
 
-},{}],60:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 module["exports"] = [
   "#{building_number} #{street_name}"
 ];
 
-},{}],61:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 module["exports"] = [
   "#{Name.first_name} #{street_suffix}",
   "#{Name.last_name} #{street_suffix}"
 ];
 
-},{}],62:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 module["exports"] = [
   "Alley",
   "Avenue",
@@ -7484,7 +7506,7 @@ module["exports"] = [
   "Wells"
 ];
 
-},{}],63:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 module["exports"] = [
   "Pacific/Midway",
   "Pacific/Pago_Pago",
@@ -7631,20 +7653,20 @@ module["exports"] = [
   "Pacific/Apia"
 ];
 
-},{}],64:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module["exports"] = [
   "#{Name.name}",
   "#{Company.name}"
 ];
 
-},{}],65:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 var app = {};
 module['exports'] = app;
 app.name = require("./name");
 app.version = require("./version");
 app.author = require("./author");
 
-},{"./author":64,"./name":66,"./version":67}],66:[function(require,module,exports){
+},{"./author":53,"./name":55,"./version":56}],55:[function(require,module,exports){
 module["exports"] = [
   "Redhold",
   "Treeflex",
@@ -7710,7 +7732,7 @@ module["exports"] = [
   "Keylex"
 ];
 
-},{}],67:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 module["exports"] = [
   "0.#.#",
   "0.##",
@@ -7719,7 +7741,7 @@ module["exports"] = [
   "#.#.#"
 ];
 
-},{}],68:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 module["exports"] = [
   "2011-10-12",
   "2012-11-12",
@@ -7727,7 +7749,7 @@ module["exports"] = [
   "2013-9-12"
 ];
 
-},{}],69:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module["exports"] = [
   "1234-2121-1221-1211",
   "1212-1221-1121-1234",
@@ -7735,7 +7757,7 @@ module["exports"] = [
   "1228-1221-1221-1431"
 ];
 
-},{}],70:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 module["exports"] = [
   "visa",
   "mastercard",
@@ -7743,14 +7765,14 @@ module["exports"] = [
   "discover"
 ];
 
-},{}],71:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 var business = {};
 module['exports'] = business;
 business.credit_card_numbers = require("./credit_card_numbers");
 business.credit_card_expiry_dates = require("./credit_card_expiry_dates");
 business.credit_card_types = require("./credit_card_types");
 
-},{"./credit_card_expiry_dates":68,"./credit_card_numbers":69,"./credit_card_types":70}],72:[function(require,module,exports){
+},{"./credit_card_expiry_dates":57,"./credit_card_numbers":58,"./credit_card_types":59}],61:[function(require,module,exports){
 module["exports"] = [
   "###-###-####",
   "(###) ###-####",
@@ -7758,9 +7780,9 @@ module["exports"] = [
   "###.###.####"
 ];
 
-},{}],73:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"./formats":72,"/Users/a/dev/faker.js/lib/locales/de/cell_phone/index.js":27}],74:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
+arguments[4][16][0].apply(exports,arguments)
+},{"./formats":61,"/Users/johanneskimmeier/Coding/faker.js/lib/locales/de/cell_phone/index.js":16}],63:[function(require,module,exports){
 module["exports"] = [
   "red",
   "green",
@@ -7795,7 +7817,7 @@ module["exports"] = [
   "silver"
 ];
 
-},{}],75:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 module["exports"] = [
   "Books",
   "Movies",
@@ -7821,14 +7843,14 @@ module["exports"] = [
   "Industrial"
 ];
 
-},{}],76:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 var commerce = {};
 module['exports'] = commerce;
 commerce.color = require("./color");
 commerce.department = require("./department");
 commerce.product_name = require("./product_name");
 
-},{"./color":74,"./department":75,"./product_name":77}],77:[function(require,module,exports){
+},{"./color":63,"./department":64,"./product_name":66}],66:[function(require,module,exports){
 module["exports"] = {
   "adjective": [
     "Small",
@@ -7890,7 +7912,7 @@ module["exports"] = {
   ]
 };
 
-},{}],78:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 module["exports"] = [
   "Adaptive",
   "Advanced",
@@ -7994,7 +8016,7 @@ module["exports"] = [
   "Vision-oriented"
 ];
 
-},{}],79:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 module["exports"] = [
   "clicks-and-mortar",
   "value-added",
@@ -8063,7 +8085,7 @@ module["exports"] = [
   "rich"
 ];
 
-},{}],80:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 module["exports"] = [
   "synergies",
   "web-readiness",
@@ -8111,7 +8133,7 @@ module["exports"] = [
   "methodologies"
 ];
 
-},{}],81:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 module["exports"] = [
   "implement",
   "utilize",
@@ -8175,7 +8197,7 @@ module["exports"] = [
   "recontextualize"
 ];
 
-},{}],82:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 module["exports"] = [
   "24 hour",
   "24/7",
@@ -8280,7 +8302,7 @@ module["exports"] = [
   "zero tolerance"
 ];
 
-},{}],83:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 var company = {};
 module['exports'] = company;
 company.suffix = require("./suffix");
@@ -8292,14 +8314,14 @@ company.bs_adjective = require("./bs_adjective");
 company.bs_noun = require("./bs_noun");
 company.name = require("./name");
 
-},{"./adjective":78,"./bs_adjective":79,"./bs_noun":80,"./bs_verb":81,"./descriptor":82,"./name":84,"./noun":85,"./suffix":86}],84:[function(require,module,exports){
+},{"./adjective":67,"./bs_adjective":68,"./bs_noun":69,"./bs_verb":70,"./descriptor":71,"./name":73,"./noun":74,"./suffix":75}],73:[function(require,module,exports){
 module["exports"] = [
   "#{Name.last_name} #{suffix}",
   "#{Name.last_name}-#{Name.last_name}",
   "#{Name.last_name}, #{Name.last_name} and #{Name.last_name}"
 ];
 
-},{}],85:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 module["exports"] = [
   "ability",
   "access",
@@ -8407,7 +8429,7 @@ module["exports"] = [
   "workforce"
 ];
 
-},{}],86:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 module["exports"] = [
   "Inc",
   "and Sons",
@@ -8415,19 +8437,19 @@ module["exports"] = [
   "Group"
 ];
 
-},{}],87:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 module["exports"] = [
   "/34##-######-####L/",
   "/37##-######-####L/"
 ];
 
-},{}],88:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 module["exports"] = [
   "/30[0-5]#-######-###L/",
   "/368#-######-###L/"
 ];
 
-},{}],89:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 module["exports"] = [
   "/6011-####-####-###L/",
   "/65##-####-####-###L/",
@@ -8437,7 +8459,7 @@ module["exports"] = [
   "/64[4-9]#-62##-####-####-###L/"
 ];
 
-},{}],90:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 var credit_card = {};
 module['exports'] = credit_card;
 credit_card.visa = require("./visa");
@@ -8451,14 +8473,14 @@ credit_card.solo = require("./solo");
 credit_card.maestro = require("./maestro");
 credit_card.laser = require("./laser");
 
-},{"./american_express":87,"./diners_club":88,"./discover":89,"./jcb":91,"./laser":92,"./maestro":93,"./mastercard":94,"./solo":95,"./switch":96,"./visa":97}],91:[function(require,module,exports){
+},{"./american_express":76,"./diners_club":77,"./discover":78,"./jcb":80,"./laser":81,"./maestro":82,"./mastercard":83,"./solo":84,"./switch":85,"./visa":86}],80:[function(require,module,exports){
 module["exports"] = [
   "/3528-####-####-###L/",
   "/3529-####-####-###L/",
   "/35[3-8]#-####-####-###L/"
 ];
 
-},{}],92:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 module["exports"] = [
   "/6304###########L/",
   "/6706###########L/",
@@ -8470,46 +8492,120 @@ module["exports"] = [
   "/6709#########{5,6}L/"
 ];
 
-},{}],93:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 module["exports"] = [
   "/50#{9,16}L/",
   "/5[6-8]#{9,16}L/",
   "/56##{9,16}L/"
 ];
 
-},{}],94:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 module["exports"] = [
   "/5[1-5]##-####-####-###L/",
   "/6771-89##-####-###L/"
 ];
 
-},{}],95:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 module["exports"] = [
   "/6767-####-####-###L/",
   "/6767-####-####-####-#L/",
   "/6767-####-####-####-##L/"
 ];
 
-},{}],96:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 module["exports"] = [
   "/6759-####-####-###L/",
   "/6759-####-####-####-#L/",
   "/6759-####-####-####-##L/"
 ];
 
-},{}],97:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 module["exports"] = [
   "/4###########L/",
   "/4###-####-####-###L/"
 ];
 
-},{}],98:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
+module["exports"] = [
+  "utf8_unicode_ci",
+  "utf8_general_ci",
+  "utf8_bin",
+  "ascii_bin",
+  "ascii_general_ci",
+  "cp1250_bin",
+  "cp1250_general_ci"
+];
+
+},{}],88:[function(require,module,exports){
+module["exports"] = [
+  "id",
+  "title",
+  "name",
+  "email",
+  "phone",
+  "token",
+  "group",
+  "category",
+  "password",
+  "comment",
+  "avatar",
+  "status",
+  "createdAt",
+  "updatedAt"
+];
+
+},{}],89:[function(require,module,exports){
+module["exports"] = [
+  "InnoDB",
+  "MyISAM",
+  "MEMORY",
+  "CSV",
+  "BLACKHOLE",
+  "ARCHIVE"
+];
+
+},{}],90:[function(require,module,exports){
+var database = {};
+module['exports'] = database;
+database.collation = require("./collation");
+database.column = require("./column");
+database.engine = require("./engine");
+database.type = require("./type");
+},{"./collation":87,"./column":88,"./engine":89,"./type":91}],91:[function(require,module,exports){
+module["exports"] = [
+  "int",
+  "varchar",
+  "text",
+  "date",
+  "datetime",
+  "tinyint",
+  "time",
+  "timestamp",
+  "smallint",
+  "mediumint",
+  "bigint",
+  "decimal",
+  "float",
+  "double",
+  "real",
+  "bit",
+  "boolean",
+  "serial",
+  "blob",
+  "binary",
+  "enum",
+  "set",
+  "geometry",
+  "point"
+];
+
+},{}],92:[function(require,module,exports){
 var date = {};
 module["exports"] = date;
 date.month = require("./month");
 date.weekday = require("./weekday");
 
-},{"./month":99,"./weekday":100}],99:[function(require,module,exports){
+},{"./month":93,"./weekday":94}],93:[function(require,module,exports){
 // Source: http://unicode.org/cldr/trac/browser/tags/release-27/common/main/en.xml#L1799
 module["exports"] = {
   wide: [
@@ -8574,7 +8670,7 @@ module["exports"] = {
   ]
 };
 
-},{}],100:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 // Source: http://unicode.org/cldr/trac/browser/tags/release-27/common/main/en.xml#L1847
 module["exports"] = {
   wide: [
@@ -8619,7 +8715,7 @@ module["exports"] = {
   ]
 };
 
-},{}],101:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 module["exports"] = [
   "Checking",
   "Savings",
@@ -8631,7 +8727,7 @@ module["exports"] = [
   "Personal Loan"
 ];
 
-},{}],102:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 module["exports"] = {
   "UAE Dirham": {
     "code": "AED",
@@ -9311,14 +9407,14 @@ module["exports"] = {
   }
 };
 
-},{}],103:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 var finance = {};
 module['exports'] = finance;
 finance.account_type = require("./account_type");
 finance.transaction_type = require("./transaction_type");
 finance.currency = require("./currency");
 
-},{"./account_type":101,"./currency":102,"./transaction_type":104}],104:[function(require,module,exports){
+},{"./account_type":95,"./currency":96,"./transaction_type":98}],98:[function(require,module,exports){
 module["exports"] = [
   "deposit",
   "withdrawal",
@@ -9326,7 +9422,7 @@ module["exports"] = [
   "invoice"
 ];
 
-},{}],105:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 module["exports"] = [
   "TCP",
   "HTTP",
@@ -9359,7 +9455,7 @@ module["exports"] = [
   "JBOD"
 ];
 
-},{}],106:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 module["exports"] = [
   "auxiliary",
   "primary",
@@ -9381,7 +9477,7 @@ module["exports"] = [
   "mobile"
 ];
 
-},{}],107:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 var hacker = {};
 module['exports'] = hacker;
 hacker.abbreviation = require("./abbreviation");
@@ -9390,7 +9486,7 @@ hacker.noun = require("./noun");
 hacker.verb = require("./verb");
 hacker.ingverb = require("./ingverb");
 
-},{"./abbreviation":105,"./adjective":106,"./ingverb":108,"./noun":109,"./verb":110}],108:[function(require,module,exports){
+},{"./abbreviation":99,"./adjective":100,"./ingverb":102,"./noun":103,"./verb":104}],102:[function(require,module,exports){
 module["exports"] = [
   "backing up",
   "bypassing",
@@ -9410,7 +9506,7 @@ module["exports"] = [
   "parsing"
 ];
 
-},{}],109:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 module["exports"] = [
   "driver",
   "protocol",
@@ -9438,7 +9534,7 @@ module["exports"] = [
   "matrix"
 ];
 
-},{}],110:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 module["exports"] = [
   "back up",
   "bypass",
@@ -9460,7 +9556,7 @@ module["exports"] = [
   "parse"
 ];
 
-},{}],111:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 var en = {};
 module['exports'] = en;
 en.title = "English";
@@ -9469,6 +9565,7 @@ en.address = require("./address");
 en.credit_card = require("./credit_card");
 en.company = require("./company");
 en.internet = require("./internet");
+en.database = require("./database");
 en.lorem = require("./lorem");
 en.name = require("./name");
 en.phone_number = require("./phone_number");
@@ -9482,7 +9579,7 @@ en.finance = require("./finance");
 en.date = require("./date");
 en.system = require("./system");
 
-},{"./address":54,"./app":65,"./business":71,"./cell_phone":73,"./commerce":76,"./company":83,"./credit_card":90,"./date":98,"./finance":103,"./hacker":107,"./internet":116,"./lorem":117,"./name":121,"./phone_number":128,"./system":129,"./team":132}],112:[function(require,module,exports){
+},{"./address":43,"./app":54,"./business":60,"./cell_phone":62,"./commerce":65,"./company":72,"./credit_card":79,"./database":90,"./date":92,"./finance":97,"./hacker":101,"./internet":110,"./lorem":111,"./name":115,"./phone_number":122,"./system":123,"./team":126}],106:[function(require,module,exports){
 module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/jarjan/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/mahdif/128.jpg",
@@ -9519,10 +9616,8 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/thierrykoblentz/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/peterlandt/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/catarino/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/wr/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/weglov/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/brandclay/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/flame_kaizar/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/ahmetsulek/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/nicolasfolliot/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jayrobinson/128.jpg",
@@ -9579,7 +9674,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/herrhaase/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/RussellBishop/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/brajeshwar/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/nachtmeister/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/cbracco/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/bermonpainter/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/abdullindenis/128.jpg",
@@ -9719,12 +9813,10 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/ooomz/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/chacky14/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jesseddy/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/thinmatt/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/shanehudson/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/akmur/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/IsaryAmairani/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/arthurholcombe1/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/andychipster/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/boxmodel/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/ehsandiary/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/LucasPerdidao/128.jpg",
@@ -9848,7 +9940,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/danro/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/hiemil/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jackiesaik/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/zacsnider/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/iduuck/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/antjanus/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/aroon_sharma/128.jpg",
@@ -9883,7 +9974,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/necodymiconer/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/praveen_vijaya/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/fabbrucci/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/cliffseal/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/travishines/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/kuldarkalvik/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/Elt_n/128.jpg",
@@ -10223,7 +10313,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/dallasbpeters/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/n3dmax/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/terpimost/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/kirillz/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/byrnecore/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/j_drake_/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/calebjoyce/128.jpg",
@@ -10430,7 +10519,6 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/markolschesky/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/jeffgolenski/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/kvasnic/128.jpg",
-  "https://s3.amazonaws.com/uifaces/faces/twitter/lindseyzilla/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/gauchomatt/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/afusinatto/128.jpg",
   "https://s3.amazonaws.com/uifaces/faces/twitter/kevinoh/128.jpg",
@@ -10752,7 +10840,7 @@ module["exports"] = [
   "https://s3.amazonaws.com/uifaces/faces/twitter/areandacom/128.jpg"
 ];
 
-},{}],113:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 module["exports"] = [
   "com",
   "biz",
@@ -10762,16 +10850,16 @@ module["exports"] = [
   "org"
 ];
 
-},{}],114:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 module["exports"] = [
   "example.org",
   "example.com",
   "example.net"
 ];
 
-},{}],115:[function(require,module,exports){
-module.exports=require(34)
-},{"/Users/a/dev/faker.js/lib/locales/de/internet/free_email.js":34}],116:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
+module.exports=require(23)
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/de/internet/free_email.js":23}],110:[function(require,module,exports){
 var internet = {};
 module['exports'] = internet;
 internet.free_email = require("./free_email");
@@ -10779,13 +10867,13 @@ internet.example_email = require("./example_email");
 internet.domain_suffix = require("./domain_suffix");
 internet.avatar_uri = require("./avatar_uri");
 
-},{"./avatar_uri":112,"./domain_suffix":113,"./example_email":114,"./free_email":115}],117:[function(require,module,exports){
+},{"./avatar_uri":106,"./domain_suffix":107,"./example_email":108,"./free_email":109}],111:[function(require,module,exports){
 var lorem = {};
 module['exports'] = lorem;
 lorem.words = require("./words");
 lorem.supplemental = require("./supplemental");
 
-},{"./supplemental":118,"./words":119}],118:[function(require,module,exports){
+},{"./supplemental":112,"./words":113}],112:[function(require,module,exports){
 module["exports"] = [
   "abbas",
   "abduco",
@@ -11629,9 +11717,9 @@ module["exports"] = [
   "xiphias"
 ];
 
-},{}],119:[function(require,module,exports){
-module.exports=require(37)
-},{"/Users/a/dev/faker.js/lib/locales/de/lorem/words.js":37}],120:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
+module.exports=require(26)
+},{"/Users/johanneskimmeier/Coding/faker.js/lib/locales/de/lorem/words.js":26}],114:[function(require,module,exports){
 module["exports"] = [
   "Aaliyah",
   "Aaron",
@@ -14642,7 +14730,7 @@ module["exports"] = [
   "Zula"
 ];
 
-},{}],121:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 var name = {};
 module['exports'] = name;
 name.first_name = require("./first_name");
@@ -14652,7 +14740,7 @@ name.suffix = require("./suffix");
 name.title = require("./title");
 name.name = require("./name");
 
-},{"./first_name":120,"./last_name":122,"./name":123,"./prefix":124,"./suffix":125,"./title":126}],122:[function(require,module,exports){
+},{"./first_name":114,"./last_name":116,"./name":117,"./prefix":118,"./suffix":119,"./title":120}],116:[function(require,module,exports){
 module["exports"] = [
   "Abbott",
   "Abernathy",
@@ -15130,7 +15218,7 @@ module["exports"] = [
   "Zulauf"
 ];
 
-},{}],123:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 module["exports"] = [
   "#{prefix} #{first_name} #{last_name}",
   "#{first_name} #{last_name} #{suffix}",
@@ -15140,7 +15228,7 @@ module["exports"] = [
   "#{first_name} #{last_name}"
 ];
 
-},{}],124:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 module["exports"] = [
   "Mr.",
   "Mrs.",
@@ -15149,7 +15237,7 @@ module["exports"] = [
   "Dr."
 ];
 
-},{}],125:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 module["exports"] = [
   "Jr.",
   "Sr.",
@@ -15164,7 +15252,7 @@ module["exports"] = [
   "DVM"
 ];
 
-},{}],126:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 module["exports"] = {
   "descriptor": [
     "Lead",
@@ -15233,7 +15321,7 @@ module["exports"] = {
     "Supervisor",
     "Associate",
     "Executive",
-    "Liason",
+    "Liaison",
     "Officer",
     "Manager",
     "Engineer",
@@ -15258,7 +15346,7 @@ module["exports"] = {
   ]
 };
 
-},{}],127:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 module["exports"] = [
   "###-###-####",
   "(###) ###-####",
@@ -15282,13 +15370,13 @@ module["exports"] = [
   "###.###.#### x#####"
 ];
 
-},{}],128:[function(require,module,exports){
-arguments[4][45][0].apply(exports,arguments)
-},{"./formats":127,"/Users/a/dev/faker.js/lib/locales/de/phone_number/index.js":45}],129:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"./formats":121,"/Users/johanneskimmeier/Coding/faker.js/lib/locales/de/phone_number/index.js":34}],123:[function(require,module,exports){
 var system = {};
 module['exports'] = system;
 system.mimeTypes = require("./mimeTypes");
-},{"./mimeTypes":130}],130:[function(require,module,exports){
+},{"./mimeTypes":124}],124:[function(require,module,exports){
 /*
 
 The MIT License (MIT)
@@ -21870,7 +21958,7 @@ module['exports'] = {
     "compressible": true
   }
 }
-},{}],131:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 module["exports"] = [
   "ants",
   "bats",
@@ -21941,18 +22029,18 @@ module["exports"] = [
   "druids"
 ];
 
-},{}],132:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 var team = {};
 module['exports'] = team;
 team.creature = require("./creature");
 team.name = require("./name");
 
-},{"./creature":131,"./name":133}],133:[function(require,module,exports){
+},{"./creature":125,"./name":127}],127:[function(require,module,exports){
 module["exports"] = [
   "#{Address.state} #{creature}"
 ];
 
-},{}],134:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 
 /**
  *
@@ -22006,6 +22094,17 @@ var Lorem = function (faker) {
   };
 
   /**
+   * slug
+   *
+   * @method faker.lorem.slug
+   * @param {number} wordCount number of words, defaults to 3
+   */
+  self.slug = function (wordCount) {
+      var words = faker.lorem.words(wordCount);
+      return Helpers.slugify(words);
+  };
+
+  /**
    * sentences
    *
    * @method faker.lorem.sentences
@@ -22038,7 +22137,7 @@ var Lorem = function (faker) {
    *
    * @method faker.lorem.paragraphs
    * @param {number} paragraphCount defaults to 3
-   * @param {string} separatora defaults to `'\n \r'`
+   * @param {string} separator defaults to `'\n \r'`
    */
   self.paragraphs = function (paragraphCount, separator) {
     if (typeof separator === "undefined") {
@@ -22081,7 +22180,7 @@ var Lorem = function (faker) {
 
 module["exports"] = Lorem;
 
-},{}],135:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 /**
  *
  * @namespace faker.name
@@ -22260,7 +22359,7 @@ function Name (faker) {
 
 module['exports'] = Name;
 
-},{}],136:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 /**
  *
  * @namespace faker.phone
@@ -22305,7 +22404,7 @@ var Phone = function (faker) {
 };
 
 module['exports'] = Phone;
-},{}],137:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 var mersenne = require('../vendor/mersenne');
 
 /**
@@ -22355,8 +22454,10 @@ function Random (faker, seed) {
       max += options.precision;
     }
 
-    var randomNumber = options.precision * Math.floor(
+    var randomNumber = Math.floor(
       mersenne.rand(max / options.precision, options.min / options.precision));
+    // Workaround problem in Float point arithmetics for e.g. 6681493 / 0.01
+    randomNumber = randomNumber / (1 / options.precision);
 
     return randomNumber;
 
@@ -22501,10 +22602,20 @@ function Random (faker, seed) {
    * alphaNumeric
    *
    * @method faker.random.alphaNumeric
+   * @param {number} count defaults to 1
    */
-  this.alphaNumeric = function alphaNumeric() {
-    return faker.random.arrayElement(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
-  }
+  this.alphaNumeric = function alphaNumeric(count) {
+    if (typeof count === "undefined") {
+      count = 1;
+    }
+
+    var wholeString = "";
+    for(var i = 0; i < count; i++) {
+      wholeString += faker.random.arrayElement(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
+    }
+
+    return wholeString;
+  };
 
   return this;
 
@@ -22512,7 +22623,7 @@ function Random (faker, seed) {
 
 module['exports'] = Random;
 
-},{"../vendor/mersenne":140}],138:[function(require,module,exports){
+},{"../vendor/mersenne":134}],132:[function(require,module,exports){
 // generates fake data for many computer systems properties
 
 /**
@@ -22534,6 +22645,7 @@ function System (faker) {
     str = str.replace(/\,/g, '_');
     str = str.replace(/\-/g, '_');
     str = str.replace(/\\/g, '_');
+    str = str.replace(/\//g, '_');
     str = str.toLowerCase();
     return str;
   };
@@ -22551,6 +22663,7 @@ function System (faker) {
     str = str.replace(/\,/g, '_');
     str = str.replace(/\-/g, '_');
     str = str.replace(/\\/g, '_');
+    str = str.replace(/\//g, '_');
     str = str.toLowerCase();
     return str;
   };
@@ -22671,14 +22784,15 @@ function System (faker) {
 }
 
 module['exports'] = System;
-},{}],139:[function(require,module,exports){
+
+},{}],133:[function(require,module,exports){
 var Faker = require('../lib');
 var faker = new Faker({ locale: 'de', localeFallback: 'en' });
 faker.locales['de'] = require('../lib/locales/de');
 faker.locales['en'] = require('../lib/locales/en');
 module['exports'] = faker;
 
-},{"../lib":10,"../lib/locales/de":32,"../lib/locales/en":111}],140:[function(require,module,exports){
+},{"../lib":12,"../lib/locales/de":21,"../lib/locales/en":105}],134:[function(require,module,exports){
 // this program is a JavaScript version of Mersenne Twister, with concealment and encapsulation in class,
 // an almost straight conversion from the original program, mt19937ar.c,
 // translated by y. okada on July 17, 2006.
@@ -22966,73 +23080,7 @@ exports.seed_array = function(A) {
     gen.init_by_array(A);
 }
 
-},{}],141:[function(require,module,exports){
-/*
- * password-generator
- * Copyright(c) 2011-2013 Bermi Ferrer <bermi@bermilabs.com>
- * MIT Licensed
- */
-(function (root) {
-
-  var localName, consonant, letter, password, vowel;
-  letter = /[a-zA-Z]$/;
-  vowel = /[aeiouAEIOU]$/;
-  consonant = /[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]$/;
-
-
-  // Defines the name of the local variable the passwordGenerator library will use
-  // this is specially useful if window.passwordGenerator is already being used
-  // by your application and you want a different name. For example:
-  //    // Declare before including the passwordGenerator library
-  //    var localPasswordGeneratorLibraryName = 'pass';
-  localName = root.localPasswordGeneratorLibraryName || "generatePassword",
-
-  password = function (length, memorable, pattern, prefix) {
-    var char, n;
-    if (length == null) {
-      length = 10;
-    }
-    if (memorable == null) {
-      memorable = true;
-    }
-    if (pattern == null) {
-      pattern = /\w/;
-    }
-    if (prefix == null) {
-      prefix = '';
-    }
-    if (prefix.length >= length) {
-      return prefix;
-    }
-    if (memorable) {
-      if (prefix.match(consonant)) {
-        pattern = vowel;
-      } else {
-        pattern = consonant;
-      }
-    }
-    n = Math.floor(Math.random() * 94) + 33;
-    char = String.fromCharCode(n);
-    if (memorable) {
-      char = char.toLowerCase();
-    }
-    if (!char.match(pattern)) {
-      return password(length, memorable, pattern, prefix);
-    }
-    return password(length, memorable, pattern, "" + prefix + char);
-  };
-
-
-  ((typeof exports !== 'undefined') ? exports : root)[localName] = password;
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      module.exports = password;
-    }
-  }
-
-  // Establish the root object, `window` in the browser, or `global` on the server.
-}(this));
-},{}],142:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 /*
 
 Copyright (c) 2012-2014 Jeffrey Mealo
@@ -23243,5 +23291,5 @@ exports.generate = function generate() {
     return browser[random[0]](random[1]);
 };
 
-},{}]},{},[139])(139)
+},{}]},{},[133])(133)
 });
